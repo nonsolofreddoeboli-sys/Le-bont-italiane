@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#173b2b"><title>Gestionale | Le Bontà Italiane</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#1e2b23;background:#f4f6f2}*{box-sizing:border-box}body{margin:0}.top{background:#173b2b;color:white;padding:22px 18px}.top h1{margin:0;font-size:23px}.top p{margin:5px 0 0;color:#d5e3d8}.wrap{max-width:1000px;margin:22px auto;padding:0 14px}.panel{background:#fff;border:1px solid #dce5dc;border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 2px 8px #183b2b0a}label{display:block;font-weight:650;margin:12px 0 6px}input,textarea{width:100%;padding:12px;border:1px solid #bdcbbf;border-radius:9px;font:inherit}textarea{min-height:210px;font:13px/1.45 ui-monospace,monospace}button{border:0;border-radius:9px;background:#1d6844;color:white;padding:12px 16px;font-weight:700;font-size:15px;cursor:pointer;margin:8px 8px 0 0}button.secondary{background:#e8efe9;color:#1c4931}button.danger{background:#9c3434}.muted{color:#617166;font-size:14px}.status{padding:10px;border-radius:8px;background:#edf4ee;margin:12px 0}.err{background:#fff0ef;color:#8b2525}.hidden{display:none!important}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tabs button{background:#e8efe9;color:#214b34}.tabs button.active{background:#1d6844;color:white}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}.file{padding:12px;border:1px dashed #9bad9f;border-radius:10px}a{color:#17613e}@media(max-width:600px){.panel{padding:14px}.top h1{font-size:21px}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="top"><h1>Le Bontà Italiane · Gestionale</h1><p>Area riservata per amministrare catalogo, categorie, offerte e immagini</p></header>
+<main class="wrap">
+<section id="login" class="panel">
+<h2>Accesso amministratori</h2><p class="muted">Accedi con uno dei due account autorizzati.</p>
+<label for="email">Email</label><input id="email" type="email" autocomplete="username" placeholder="La tua email">
+<label for="password">Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password">
+<button id="loginBtn">Accedi</button><div id="loginStatus" class="status" role="status">Inserisci le credenziali del tuo account.</div>
+</section>
+<section id="app" class="hidden">
+<div class="panel"><div class="grid"><div><strong>Account:</strong> <span id="who"></span></div><div><strong>Stato catalogo:</strong> <span id="catalogState">da caricare</span></div></div><button id="loadBtn" class="secondary">Ricarica dati</button><button id="logoutBtn" class="danger">Esci</button><div id="appStatus" class="status" role="status">Accesso effettuato.</div></div>
+<div class="panel"><h2>Contenuti del sito</h2><p class="muted">Modifica i dati in formato JSON. Prima di salvare, controlla che ogni campo contenga JSON valido. Non inserire prodotti inventati: importa qui il catalogo originale quando è disponibile.</p>
+<div class="tabs"><button class="active" data-tab="categories">Categorie</button><button data-tab="products">Prodotti</button><button data-tab="settings">Impostazioni e offerte</button></div>
+<div id="categories" class="tab"><label for="categoriesJson">Categorie e sottocategorie (JSON)</label><textarea id="categoriesJson" spellcheck="false">[]</textarea></div>
+<div id="products" class="tab hidden"><label for="productsJson">Prodotti (JSON)</label><textarea id="productsJson" spellcheck="false">{}</textarea></div>
+<div id="settings" class="tab hidden"><label for="settingsJson">Impostazioni, testi e offerte (JSON)</label><textarea id="settingsJson" spellcheck="false">{}</textarea></div>
+<button id="saveBtn">Salva nel database</button>
+</div>
+<div class="panel"><h2>Carica una fotografia prodotto</h2><p class="muted">Le immagini vengono salvate nel deposito pubblico del catalogo. Dopo il caricamento copia l'indirizzo e inseriscilo nel prodotto corrispondente.</p><div class="file"><input id="photo" type="file" accept="image/jpeg,image/png,image/webp"><button id="uploadBtn">Carica foto</button><div id="photoResult" class="muted"></div></div></div>
+</section>
+</main>
+<script>
+const SUPABASE_URL='https://plkxxumxakkiopzngccz.supabase.co';
+const SUPABASE_KEY='sb_publishable_LZtYXRnLbyfA_dIdB3Jgig_Vb_UWmod';
+const ADMINS=['nonsolofreddoeboli@gmail.com','carmine.diperna226@gmail.com'];
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
+function status(id,msg,error=false){$(id).textContent=msg;$(id).className='status'+(error?' err':'')}
+function jsonValue(id){try{return JSON.parse($(id).value)}catch(e){throw new Error('JSON non valido nel campo '+id+': '+e.message)}}
+function showApp(user){$('login').classList.add('hidden');$('app').classList.remove('hidden');$('who').textContent=user.email}
+async function loadData(){status('appStatus','Caricamento dati…');const {data,error}=await db.from('site_content').select('*').eq('id',true).maybeSingle();if(error)throw error;if(data){$('categoriesJson').value=JSON.stringify(data.categories??[],null,2);$('productsJson').value=JSON.stringify(data.products??{},null,2);$('settingsJson').value=JSON.stringify(data.settings??{},null,2);$('catalogState').textContent='dati presenti · aggiornati '+new Date(data.updated_at).toLocaleString('it-IT')}else{$('categoriesJson').value='[]';$('productsJson').value='{}';$('settingsJson').value='{}';$('catalogState').textContent='vuoto: catalogo originale da importare'}status('appStatus',data?'Dati caricati.':'Database pronto: non risultano ancora prodotti o categorie.')}
+async function checkSession(){const {data:{session}}=await db.auth.getSession();if(session&&ADMINS.includes(session.user.email.toLowerCase())){showApp(session.user);try{await loadData()}catch(e){status('appStatus','Errore caricamento: '+e.message,true)}}}
+$('loginBtn').onclick=async()=>{status('loginStatus','Verifica accesso…');const email=$('email').value.trim().toLowerCase();if(!ADMINS.includes(email)){status('loginStatus','Email non autorizzata.',true);return}const {data,error}=await db.auth.signInWithPassword({email,password:$('password').value});if(error){status('loginStatus','Accesso non riuscito: '+error.message,true);return}showApp(data.user);try{await loadData()}catch(e){status('appStatus','Errore caricamento: '+e.message,true)}};
+$('loadBtn').onclick=()=>loadData().catch(e=>status('appStatus','Errore: '+e.message,true));
+$('logoutBtn').onclick=async()=>{await db.auth.signOut();$('app').classList.add('hidden');$('login').classList.remove('hidden');$('password').value='';status('loginStatus','Sei uscito dall’area riservata.')};
+$('saveBtn').onclick=async()=>{try{const categories=jsonValue('categoriesJson'),products=jsonValue('productsJson'),settings=jsonValue('settingsJson');status('appStatus','Salvataggio…');const {error}=await db.from('site_content').upsert({id:true,categories,products,settings,updated_at:new Date().toISOString()},{onConflict:'id'});if(error)throw error;status('appStatus','Salvataggio completato nel database. Il sito pubblico mostrerà questi dati quando sarà collegato alla tabella Supabase.')}catch(e){status('appStatus','Salvataggio non riuscito: '+e.message,true)}};
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('hidden',x.id!==b.dataset.tab))});
+$('uploadBtn').onclick=async()=>{const f=$('photo').files[0];if(!f){$('photoResult').textContent='Seleziona prima una foto.';return}if(f.size>10*1024*1024){$('photoResult').textContent='File troppo grande: massimo 10 MB.';return}const ext=f.name.split('.').pop().toLowerCase();const path='catalog/'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext;$('photoResult').textContent='Caricamento…';const {error}=await db.storage.from('catalog-assets').upload(path,f,{upsert:false,contentType:f.type});if(error){$('photoResult').textContent='Errore: '+error.message;return}const {data}=db.storage.from('catalog-assets').getPublicUrl(path);$('photoResult').innerHTML='Foto caricata. URL: <a href="'+data.publicUrl+'" target="_blank" rel="noopener">Apri immagine</a><br><button id="copyUrl" class="secondary">Copia indirizzo</button>';document.getElementById('copyUrl').onclick=()=>navigator.clipboard.writeText(data.publicUrl)};
+checkSession();
+</script>
+</body></html>
