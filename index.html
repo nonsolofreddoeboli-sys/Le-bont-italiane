@@ -230,10 +230,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 <script>(() => {
   'use strict';
   const payload = JSON.parse(document.getElementById('catalog-data').textContent);
-  const CATS = payload.categories || [];
-  const PRODUCTS = payload.products || {};
+  let CATS = payload.categories || [];
+  let PRODUCTS = payload.products || {};
   const ASSETS = payload.assets || {};
-  const SETTINGS = payload.settings || {};
+  let SETTINGS = payload.settings || {};
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, x => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
   const photoURL = s => ASSETS[s] || s || '';
@@ -331,6 +331,31 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
     root.append(section);
   }
   function route(){closeMenu();const hash=decodeURIComponent(location.hash.slice(1))||'home';const cat=bySlug(hash);if(cat){renderCategory(cat);document.title=cat.title+' | '+(SETTINGS.siteName || 'Le Bontà Italiane')}else{renderHome();document.title=(SETTINGS.siteName || 'Le Bontà Italiane')+' | Catalogo'}window.scrollTo(0,0);}
+  async function loadPublishedCatalog(){
+    try {
+      const key='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsa3h4dW14YWtraW9wem5nY2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MzkzMjYsImV4cCI6MjEwODQxNTMyNn0.z2KTD-8_7soPOtIHevh7JIBitg0aVaeofSFHT8-GTQo';
+      const response=await fetch('https://plkxxumxakkiopzngccz.supabase.co/rest/v1/site_content?select=categories,products,settings&id=eq.true',{
+        headers:{apikey:key,Authorization:'Bearer '+key},
+        cache:'no-store'
+      });
+      if(!response.ok) throw new Error('Catalog API returned '+response.status);
+      const rows=await response.json();
+      if(!Array.isArray(rows)||!rows.length)return;
+      const data=rows[0];
+      if(Array.isArray(data.categories))CATS=data.categories;
+      if(data.products&&typeof data.products==='object')PRODUCTS=data.products;
+      if(data.settings&&typeof data.settings==='object')SETTINGS=data.settings;
+      const logo=SETTINGS.logoImage||ASSETS['assets/logo-9.webp'];
+      if(logo){$('header-logo').src=logo;$('drawer-logo').src=logo;}
+      $('footer-name').textContent=SETTINGS.siteName||'Le Bontà Italiane';
+      $('footer-tagline').textContent=SETTINGS.tagline||'Qualità · Tradizione · Buon gusto';
+      $('footer-contact').href='https://wa.me/'+String(SETTINGS.whatsapp||'393270649626').replace(/\\D/g,'');
+      menu();
+      route();
+    } catch(error) {
+      console.warn('Catalogo online non aggiornato; uso i dati incorporati.',error);
+    }
+  }
   function setup(){
     const logo=SETTINGS.logoImage || ASSETS['assets/logo-9.webp'];if(logo){$('header-logo').src=logo;$('drawer-logo').src=logo;}
     const siteName=SETTINGS.siteName || 'Le Bontà Italiane';
@@ -340,6 +365,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
     menu();route();window.addEventListener('hashchange',route);
   }
   setup();
+  loadPublishedCatalog();
 })();
 </script>
 </body></html>
