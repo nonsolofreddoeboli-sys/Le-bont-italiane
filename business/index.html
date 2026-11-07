@@ -47,7 +47,7 @@ const SUPABASE_KEY='sb_publishable_LZtYXRnLbyfA_dIdB3Jgig_Vb_UWmod';
 const ADMINS=['nonsolofreddoeboli@gmail.com','carmine.diperna226@gmail.com'];
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
-let catalog={categories:[],products:{},settings:{}},assets={},currentView='',activeEdit=null;
+let catalog={categories:[],products:{},settings:{}},assets={},sourceCatalog=null,currentView='',activeEdit=null;
 const productTotal=()=>Object.values(catalog.products||{}).reduce((n,a)=>n+(Array.isArray(a)?a.length:0),0);
 function msg(t,kind=''){ $('globalStatus').textContent=t;$('globalStatus').className='status '+kind; }
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -55,13 +55,14 @@ function updateCounts(){$('categoryCount').textContent=catalog.categories.length
 function showApp(user){$('login').classList.add('hidden');$('app').classList.remove('hidden');}
 function imageFor(path){if(!path)return '';return assets[path]||path;}
 async function loadOriginal(){
+ if(sourceCatalog)return sourceCatalog;
  try{
   const home=await fetch('/',{cache:'no-store'});
   if(home.ok){
    const source=await home.text();
    const doc=new DOMParser().parseFromString(source,'text/html');
    const node=doc.querySelector('#catalog-data');
-   if(node){const parsed=JSON.parse(node.textContent);assets=parsed.assets||{};return parsed;}
+   if(node){const parsed=JSON.parse(node.textContent);assets=parsed.assets||{};sourceCatalog=parsed;return parsed;}
   }
  }catch(e){}
  const r=await fetch('./catalog-original.json.gz.b64',{cache:'no-store'});if(!r.ok)throw new Error('File catalogo originale non trovato ('+r.status+').');
@@ -71,7 +72,7 @@ async function loadOriginal(){
  return JSON.parse(await new Response(stream).text());
 }
 async function loadAssets(){
- try{const home=await fetch('/',{cache:'no-store'});if(!home.ok)return;const source=await home.text();const doc=new DOMParser().parseFromString(source,'text/html');const node=doc.querySelector('#catalog-data');if(node){const parsed=JSON.parse(node.textContent);assets=parsed.assets||{};}}
+ try{const home=await fetch('/',{cache:'no-store'});if(!home.ok)return;const source=await home.text();const doc=new DOMParser().parseFromString(source,'text/html');const node=doc.querySelector('#catalog-data');if(node){const parsed=JSON.parse(node.textContent);assets=parsed.assets||{};sourceCatalog=parsed;}}
  catch(e){assets={};}
 }
 async function loadData(){
@@ -100,6 +101,7 @@ function renderCategories(q=''){
  $('viewList').innerHTML=rows.map((c,i)=>'<div class="item"><div class="item-photo">▦</div><div class="item-main"><strong>'+esc(c.title)+'</strong><small>'+esc(c.parent)+(c.child?' · '+esc(c.child):'')+'</small></div><button class="secondary" data-cat-view="'+esc(c.slug)+'">Visualizza</button><button class="secondary" data-cat-edit="'+esc(c.slug)+'">Modifica</button></div>').join('')||'<div class="empty">Nessuna categoria trovata.</div>';
  document.querySelectorAll('[data-cat-view]').forEach(b=>b.onclick=()=>{const c=catalog.categories.find(x=>x.slug===b.dataset.catView);const ps=catalog.products[c.slug]||[];showPreview('Categoria',c.title,'Categoria: '+c.parent+'\nSottocategoria: '+(c.child||'—')+'\nProdotti collegati: '+ps.length,c.image)});
  document.querySelectorAll('[data-cat-edit]').forEach(b=>b.onclick=()=>editCategory(b.dataset.catEdit));
+ document.querySelectorAll('[data-cat-del]').forEach(b=>b.onclick=()=>{const slug=b.dataset.catDel;if((catalog.products[slug]||[]).length)return alert('Sposta o elimina prima i prodotti collegati a questa categoria.');if(confirm('Eliminare questa categoria?')){catalog.categories=catalog.categories.filter(c=>c.slug!==slug);delete catalog.products[slug];renderCategories();updateCounts();}});
 }
 function allProducts(){return Object.values(catalog.products||{}).flatMap(a=>Array.isArray(a)?a:[]);}
 function renderProducts(q=''){
@@ -107,12 +109,14 @@ function renderProducts(q=''){
  $('viewList').innerHTML=rows.map(p=>'<div class="item"><div class="item-photo">'+(p.image?'<img src="'+esc(imageFor(p.image))+'" onerror="this.style.display=\'none\'">':'▣')+'</div><div class="item-main"><strong>'+esc(p.name)+'</strong><small>'+esc((catalog.categories.find(c=>c.slug===p.category)||{}).title||p.category)+' · '+esc(p.price||'Prezzo da inserire')+'</small></div><button class="secondary" data-prod-view="'+esc(p.id)+'">Visualizza</button><button class="secondary" data-prod-edit="'+esc(p.id)+'">Modifica</button></div>').join('')||'<div class="empty">Nessun prodotto trovato.</div>';
  document.querySelectorAll('[data-prod-view]').forEach(b=>b.onclick=()=>{const p=allProducts().find(x=>x.id===b.dataset.prodView);showPreview('Scheda prodotto',p.name,(p.description||'')+'\nFormato: '+(p.format||'—')+'\nCompatibilità: '+(p.compatibility||'—')+'\nPrezzo: '+(p.price||'Da inserire'),p.image)});
  document.querySelectorAll('[data-prod-edit]').forEach(b=>b.onclick=()=>editProduct(b.dataset.prodEdit));
+ document.querySelectorAll('[data-prod-del]').forEach(b=>b.onclick=()=>{if(confirm('Eliminare questo prodotto?')){for(const k of Object.keys(catalog.products))catalog.products[k]=(catalog.products[k]||[]).filter(x=>x.id!==b.dataset.prodDel);renderProducts($('searchBox')?.value||'');updateCounts();}});
 }
 function renderOffers(){
  const offers=catalog.settings.offers||[];
  $('viewList').innerHTML=offers.map((o,i)=>'<div class="item"><div class="item-photo">％</div><div class="item-main"><strong>'+esc(o.title||'Offerta senza titolo')+'</strong><small>'+esc(o.price||'Prezzo da definire')+'</small></div><button class="secondary" data-offer-view="'+i+'">Visualizza</button><button class="secondary" data-offer-edit="'+i+'">Modifica</button></div>').join('')||'<div class="empty">Non ci sono ancora offerte. Premi “Aggiungi” per crearne una.</div>';
  document.querySelectorAll('[data-offer-view]').forEach(b=>b.onclick=()=>{const o=offers[+b.dataset.offerView];showPreview('Anteprima offerta',o.title||'Offerta',o.text||'',o.image)});
  document.querySelectorAll('[data-offer-edit]').forEach(b=>b.onclick=()=>editOffer(+b.dataset.offerEdit));
+ document.querySelectorAll('[data-offer-del]').forEach(b=>b.onclick=()=>{if(confirm('Eliminare questa offerta?')){catalog.settings.offers.splice(+b.dataset.offerDel,1);renderOffers();}});
 }
 function renderMedia(){
  const rows=allProducts().filter(p=>p.image);
