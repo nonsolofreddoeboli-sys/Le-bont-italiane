@@ -55,13 +55,27 @@ function updateCounts(){$('categoryCount').textContent=catalog.categories.length
 function showApp(user){$('login').classList.add('hidden');$('app').classList.remove('hidden');}
 function imageFor(path){if(!path)return '';return assets[path]||path;}
 async function loadOriginal(){
+ try{
+  const home=await fetch('/',{cache:'no-store'});
+  if(home.ok){
+   const source=await home.text();
+   const doc=new DOMParser().parseFromString(source,'text/html');
+   const node=doc.querySelector('#catalog-data');
+   if(node){const parsed=JSON.parse(node.textContent);assets=parsed.assets||{};return parsed;}
+  }
+ }catch(e){}
  const r=await fetch('./catalog-original.json.gz.b64',{cache:'no-store'});if(!r.ok)throw new Error('File catalogo originale non trovato ('+r.status+').');
  const b64=(await r.text()).trim();const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
  if(!('DecompressionStream' in window))throw new Error('Questo browser non supporta l’importazione automatica. Aggiorna Chrome.');
  const stream=new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'));
  return JSON.parse(await new Response(stream).text());
 }
+async function loadAssets(){
+ try{const home=await fetch('/',{cache:'no-store'});if(!home.ok)return;const source=await home.text();const doc=new DOMParser().parseFromString(source,'text/html');const node=doc.querySelector('#catalog-data');if(node){const parsed=JSON.parse(node.textContent);assets=parsed.assets||{};}}
+ catch(e){assets={};}
+}
 async function loadData(){
+ await loadAssets();
  msg('Recupero catalogo originale…');
  const {data,error}=await db.from('site_content').select('*').eq('id',true).maybeSingle();
  if(error)throw error;
@@ -84,20 +98,20 @@ function openView(view){
 function renderCategories(q=''){
  const rows=catalog.categories.filter(c=>(c.title+' '+c.parent+' '+c.child).toLowerCase().includes(q.toLowerCase()));
  $('viewList').innerHTML=rows.map((c,i)=>'<div class="item"><div class="item-photo">▦</div><div class="item-main"><strong>'+esc(c.title)+'</strong><small>'+esc(c.parent)+(c.child?' · '+esc(c.child):'')+'</small></div><button class="secondary" data-cat-view="'+esc(c.slug)+'">Visualizza</button><button class="secondary" data-cat-edit="'+esc(c.slug)+'">Modifica</button></div>').join('')||'<div class="empty">Nessuna categoria trovata.</div>';
- document.querySelectorAll('[data-cat-view]').forEach(b=>b.onclick=()=>{const c=catalog.categories.find(x=>x.slug===b.dataset.catView);const ps=catalog.products[c.slug]||[];showPreview('Categoria',c.title,'Categoria: '+c.parent+'\nSottocategoria: '+(c.child||'—')+'\nProdotti collegati: '+ps.length)});
+ document.querySelectorAll('[data-cat-view]').forEach(b=>b.onclick=()=>{const c=catalog.categories.find(x=>x.slug===b.dataset.catView);const ps=catalog.products[c.slug]||[];showPreview('Categoria',c.title,'Categoria: '+c.parent+'\nSottocategoria: '+(c.child||'—')+'\nProdotti collegati: '+ps.length,c.image)});
  document.querySelectorAll('[data-cat-edit]').forEach(b=>b.onclick=()=>editCategory(b.dataset.catEdit));
 }
 function allProducts(){return Object.values(catalog.products||{}).flatMap(a=>Array.isArray(a)?a:[]);}
 function renderProducts(q=''){
  const rows=allProducts().filter(p=>(p.name+' '+p.description+' '+p.category).toLowerCase().includes(q.toLowerCase()));
  $('viewList').innerHTML=rows.map(p=>'<div class="item"><div class="item-photo">'+(p.image?'<img src="'+esc(imageFor(p.image))+'" onerror="this.style.display=\'none\'">':'▣')+'</div><div class="item-main"><strong>'+esc(p.name)+'</strong><small>'+esc((catalog.categories.find(c=>c.slug===p.category)||{}).title||p.category)+' · '+esc(p.price||'Prezzo da inserire')+'</small></div><button class="secondary" data-prod-view="'+esc(p.id)+'">Visualizza</button><button class="secondary" data-prod-edit="'+esc(p.id)+'">Modifica</button></div>').join('')||'<div class="empty">Nessun prodotto trovato.</div>';
- document.querySelectorAll('[data-prod-view]').forEach(b=>b.onclick=()=>{const p=allProducts().find(x=>x.id===b.dataset.prodView);showPreview('Scheda prodotto',p.name,(p.description||'')+'\nFormato: '+(p.format||'—')+'\nCompatibilità: '+(p.compatibility||'—')+'\nPrezzo: '+(p.price||'Da inserire'))});
+ document.querySelectorAll('[data-prod-view]').forEach(b=>b.onclick=()=>{const p=allProducts().find(x=>x.id===b.dataset.prodView);showPreview('Scheda prodotto',p.name,(p.description||'')+'\nFormato: '+(p.format||'—')+'\nCompatibilità: '+(p.compatibility||'—')+'\nPrezzo: '+(p.price||'Da inserire'),p.image)});
  document.querySelectorAll('[data-prod-edit]').forEach(b=>b.onclick=()=>editProduct(b.dataset.prodEdit));
 }
 function renderOffers(){
  const offers=catalog.settings.offers||[];
  $('viewList').innerHTML=offers.map((o,i)=>'<div class="item"><div class="item-photo">％</div><div class="item-main"><strong>'+esc(o.title||'Offerta senza titolo')+'</strong><small>'+esc(o.price||'Prezzo da definire')+'</small></div><button class="secondary" data-offer-view="'+i+'">Visualizza</button><button class="secondary" data-offer-edit="'+i+'">Modifica</button></div>').join('')||'<div class="empty">Non ci sono ancora offerte. Premi “Aggiungi” per crearne una.</div>';
- document.querySelectorAll('[data-offer-view]').forEach(b=>b.onclick=()=>{const o=offers[+b.dataset.offerView];showPreview('Anteprima offerta',o.title||'Offerta',o.text||'')});
+ document.querySelectorAll('[data-offer-view]').forEach(b=>b.onclick=()=>{const o=offers[+b.dataset.offerView];showPreview('Anteprima offerta',o.title||'Offerta',o.text||'',o.image)});
  document.querySelectorAll('[data-offer-edit]').forEach(b=>b.onclick=()=>editOffer(+b.dataset.offerEdit));
 }
 function renderMedia(){
@@ -105,7 +119,7 @@ function renderMedia(){
  $('viewList').innerHTML=rows.map(p=>'<div class="item"><div class="item-photo">'+(p.image?'<img src="'+esc(imageFor(p.image))+'" onerror="this.style.display=\'none\'">':'▣')+'</div><div class="item-main"><strong>'+esc(p.name)+'</strong><small>'+esc(p.image)+'</small></div><button class="secondary" data-media-view="'+esc(p.id)+'">Visualizza</button></div>').join('')||'<div class="empty">Nessuna immagine associata.</div>';
  document.querySelectorAll('[data-media-view]').forEach(b=>b.onclick=()=>{const p=allProducts().find(x=>x.id===b.dataset.mediaView);showPreview('Immagine prodotto',p.name,p.image||'Nessuna immagine')});
 }
-function showPreview(title,name,detail){$('modalRoot').innerHTML='<div class="modal-back" id="modalBack"><div class="modal"><div class="eyebrow">'+esc(title)+'</div><h2>'+esc(name)+'</h2><div class="preview"><p style="white-space:pre-line;margin:0">'+esc(detail)+'</p></div><div class="modal-actions"><button id="closeModal" class="secondary">Chiudi</button></div></div></div>';$('closeModal').onclick=closeModal;}
+function showPreview(title,name,detail,image=''){const src=imageFor(image);$('modalRoot').innerHTML='<div class="modal-back" id="modalBack"><div class="modal"><div class="eyebrow">'+esc(title)+'</div><h2>'+esc(name)+'</h2>'+(src?'<img src="'+esc(src)+'" alt="'+esc(name)+'" style="width:100%;max-height:260px;object-fit:contain;background:#f6f8f5;border-radius:12px;margin:5px 0 12px">':'')+'<div class="preview"><p style="white-space:pre-line;margin:0">'+esc(detail)+'</p></div><div class="modal-actions"><button id="closeModal" class="secondary">Chiudi</button></div></div></div>';$('closeModal').onclick=closeModal;}
 function closeModal(){$('modalRoot').innerHTML='';}
 function modal(title,body,onSave){$('modalRoot').innerHTML='<div class="modal-back"><div class="modal"><h2>'+title+'</h2>'+body+'<div class="modal-actions"><button class="secondary" id="cancelModal">Annulla</button><button id="saveModal">Salva modifiche</button></div></div></div>';$('cancelModal').onclick=closeModal;$('saveModal').onclick=()=>{if(onSave())closeModal();};}
 function editCategory(slug){
