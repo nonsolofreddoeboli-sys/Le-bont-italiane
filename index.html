@@ -230,8 +230,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 <script>(() => {
   'use strict';
   const payload = JSON.parse(document.getElementById('catalog-data').textContent);
-  let CATS = payload.categories || [];
-  let PRODUCTS = payload.products || {};
+  let CATS = (payload.categories || []).filter(c => c.published !== false);
+  let PRODUCTS = Object.fromEntries(Object.entries(payload.products || {}).map(([slug,items]) => [slug,(Array.isArray(items)?items:[]).filter(p => p.published !== false)]));
   const ASSETS = payload.assets || {};
   let SETTINGS = payload.settings || {};
   const $ = id => document.getElementById(id);
@@ -342,8 +342,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
       const rows=await response.json();
       if(!Array.isArray(rows)||!rows.length)return;
       const data=rows[0];
-      if(Array.isArray(data.categories))CATS=data.categories;
-      if(data.products&&typeof data.products==='object')PRODUCTS=data.products;
+      if(Array.isArray(data.categories))CATS=data.categories.filter(c => c.published !== false);
+      if(data.products&&typeof data.products==='object')PRODUCTS=Object.fromEntries(Object.entries(data.products).map(([slug,items])=>[slug,(Array.isArray(items)?items:[]).filter(p=>p.published!==false)]));
       if(data.settings&&typeof data.settings==='object')SETTINGS=data.settings;
       const logo=SETTINGS.logoImage||ASSETS['assets/logo-9.webp'];
       if(logo){$('header-logo').src=logo;$('drawer-logo').src=logo;}
