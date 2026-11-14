@@ -238,7 +238,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   const esc = s => String(s ?? '').replace(/[&<>"']/g, x => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
   const photoURL = s => ASSETS[s] || s || '';
   const iconWhatsApp = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M20 11.6a8 8 0 0 1-11.7 7.1l-4.4 1.1L5 15.6a8 8 0 1 1 15-4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.7 8.9c-.5.4-.6 1.1-.2 2.2.9 2.3 3.4 4.3 5.7 4.4 1.1 0 1.9-.7 1.9-1.2 0-.3-1.9-1.3-2.2-1.2l-.9 1c-1.1-.4-2.2-1.5-2.6-2.5l.9-.9c0-.4-.8-1.9-1.1-1.9-.5 0-1.1.1-1.7.5Z" fill="currentColor"/></svg>';
-  const bySlug = s => CATS.find(c => c.slug === s);
+  const bySlug = s => CATS.find(c => c.slug === s);\n  const categoryOrder = list => {const a=[...list];return SETTINGS.categoryOrderMode==='alphabetical'?a.sort((x,y)=>String(x.title||'').localeCompare(String(y.title||''),'it',{sensitivity:'base'})):a.sort((x,y)=>(Number(x.sortOrder)||0)-(Number(y.sortOrder)||0));};
   const make = (tag, cl, tx) => { const el = document.createElement(tag); if (cl) el.className = cl; if (tx !== undefined) el.textContent = tx; return el; };
   function linkForProduct(p) {
     const cat = bySlug(p.category);
@@ -248,43 +248,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   }
   function setImage(img,key) {img.src = photoURL(key); img.loading = 'lazy'; img.decoding = 'async';}
   function menu() {
-    const nav = $('drawer-nav'); nav.replaceChildren();
-    const parents = [...new Set(CATS.map(c => c.parent || 'Catalogo'))];
-    for(const parent of parents) {
-      const entries = CATS.filter(c => (c.parent || 'Catalogo') === parent);
-      const group = make('div','drawer-group');
-      if (entries.length === 1 && !entries[0].child) {
-        const a = make('a','drawer-direct',parent); a.href='#'+encodeURIComponent(entries[0].slug);group.append(a);nav.append(group);continue;
-      }
-      const toggle = make('button','drawer-parent'); toggle.type='button';toggle.setAttribute('aria-expanded','false');
-      toggle.append(make('span','',parent),make('span','drawer-arrow','⌄'));
-      const inside = make('div','drawer-children');inside.hidden=true;
-      toggle.addEventListener('click',()=>{const next=inside.hidden;inside.hidden=!next;toggle.setAttribute('aria-expanded',String(next));});
-      group.append(toggle,inside); nav.append(group);
-      const subGroupNames = [...new Set(entries.filter(c=>(c.child||'').includes(' · ')).map(c=>c.child.split(' · ')[0].trim()))];
-      const hasChildrenFor = brand => entries.some(c=>(c.child||'').startsWith(brand+' · '));
-      const seenSub = new Set();
-      for (const c of entries) {
-        const child=c.child || c.title || c.parent;
-        if (subGroupNames.includes(child) && hasChildrenFor(child))continue;
-        if (child.includes(' · ')){
-          const [brand] = child.split(' · ');
-          if (!seenSub.has(brand)) {
-            seenSub.add(brand);
-            const wrap=make('div','drawer-subgroup');const b=make('button','drawer-subparent');b.type='button'; b.setAttribute('aria-expanded','false');
-            b.append(make('span','',brand),make('span','drawer-arrow','⌄'));
-            const subs=make('div','drawer-subchildren');subs.hidden=true;
-            b.addEventListener('click',()=>{const next=subs.hidden;subs.hidden=!next;b.setAttribute('aria-expanded',String(next));});
-            wrap.append(b,subs);inside.append(wrap);
-            for (const sc of entries.filter(x=>(x.child||'').startsWith(brand+' · '))) {
-              const a=make('a','',sc.child.slice(brand.length+3));a.href='#'+encodeURIComponent(sc.slug);subs.append(a);
-            }
-          }
-        } else {
-          const a = make('a','',child);a.href='#'+encodeURIComponent(c.slug);inside.append(a);
-        }
-      }
+    const nav=$('drawer-nav');nav.replaceChildren();
+    const roots=categoryOrder(CATS.filter(c=>!c.parentSlug)),groups=new Map();
+    roots.forEach(c=>{const key=c.parent||c.title||'Catalogo';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(c);});
+    function addNode(container,c,depth=0){
+      const children=categoryOrder(CATS.filter(x=>x.parentSlug===c.slug)),label=c.child&&!c.parentSlug?c.child:c.title;
+      if(!children.length){const a=make('a',depth?'':'drawer-direct',label);a.href='#'+encodeURIComponent(c.slug);container.append(a);return;}
+      const wrap=make('div',depth?'drawer-subgroup':'drawer-group'),toggle=make('button',depth?'drawer-subparent':'drawer-parent');toggle.type='button';toggle.setAttribute('aria-expanded','false');toggle.append(make('span','',label),make('span','drawer-arrow','⌄'));
+      const inside=make('div',depth?'drawer-subchildren':'drawer-children');inside.hidden=true;toggle.addEventListener('click',()=>{const next=inside.hidden;inside.hidden=!next;toggle.setAttribute('aria-expanded',String(next));});wrap.append(toggle,inside);container.append(wrap);children.forEach(ch=>addNode(inside,ch,depth+1));
     }
+    for(const [group,entries] of groups){const wrap=make('div','drawer-group');if(entries.length===1&&!entries[0].child&&!CATS.some(x=>x.parentSlug===entries[0].slug)){const a=make('a','drawer-direct',group);a.href='#'+encodeURIComponent(entries[0].slug);wrap.append(a);nav.append(wrap);continue;}const toggle=make('button','drawer-parent');toggle.type='button';toggle.setAttribute('aria-expanded','false');toggle.append(make('span','',group),make('span','drawer-arrow','⌄'));const inside=make('div','drawer-children');inside.hidden=true;toggle.addEventListener('click',()=>{const next=inside.hidden;inside.hidden=!next;toggle.setAttribute('aria-expanded',String(next));});wrap.append(toggle,inside);nav.append(wrap);entries.forEach(c=>addNode(inside,c,0));}
     nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMenu));
   }
   const drawer=$('site-menu'); const overlay=$('overlay');
@@ -310,7 +283,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
     const body=make('div','product-body');body.append(make('h3','',p.name));
     if(p.format || p.compatibility || p.blendNote){
       const details=make('div','product-details');if((p.category||'').startsWith('cialde-') || (p.category||'').startsWith('capsule-borbone-'))details.classList.add('single-detail');
-      for (const [label,value] of [[p.category==='pellet'?'Peso':(p.category?.startsWith('macchine-') ? 'Tipologia' : 'Taglia'),p.format],[p.category==='pellet'?'Legno':'Compatibilità',p.compatibility]]){
+      for (const [label,value] of [[p.category==='pellet'?'Peso':(p.category?.startsWith('macchine-') ? 'Tipologia' : 'Taglia'),p.format],[p.compatibilityLabel || (p.category==='pellet'?'Legno':'Compatibilità'),p.compatibility]]){
         if(!value)continue;
         const row=make('div','product-detail');row.append(make('span','detail-key',label),make('span','detail-value',value));details.append(row);
       }
@@ -322,7 +295,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   function renderCategory(c){
     const root=$('site-main');root.replaceChildren();
     const section=make('div','container listing');const hero=make('section','listing-hero');const copy=make('div','listing-hero-copy');
-    copy.append(make('span','section-kicker','Catalogo · Le Bontà Italiane'),make('h1','',c.title),make('p','breadcrumbs',`Home  ›  ${c.parent}${c.child?'  ›  '+c.child:''}`));
+    const crumbs=[];let current=c,seen=new Set();while(current&&!seen.has(current.slug)){seen.add(current.slug);crumbs.unshift(current.title);current=CATS.find(x=>x.slug===current.parentSlug);}copy.append(make('span','section-kicker','Catalogo · Le Bontà Italiane'),make('h1','',c.title),make('p','breadcrumbs','Home  ›  '+(crumbs.length?crumbs.join('  ›  '):(c.parent+(c.child?'  ›  '+c.child:''))));
     hero.append(copy);section.append(hero);
     const items=(PRODUCTS[c.slug]||[]);
     const caption=make('div','listing-caption');const ct=make('div');ct.append(make('span','section-kicker','La nostra selezione'),make('h2','','I nostri prodotti'));caption.append(ct,make('span','count-pill',items.length+' '+(items.length===1?'prodotto':'prodotti')));section.append(caption);
