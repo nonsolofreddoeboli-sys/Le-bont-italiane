@@ -7,7 +7,9 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="only light" name="color-scheme"/>
 <meta content="#ffffff" name="theme-color"/>
-<meta content="Le Bontà Italiane — Cialde, capsule, macchine da caffè e pellet. Consulta il catalogo e chiedi informazioni su WhatsApp." name="description"/>
+<meta content="Scopri Le Bontà Italiane: cialde e capsule di caffè, macchine da caffè, vini, liquori, panettoni Fiasconaro e pellet. Consulta il catalogo e chiedi informazioni su WhatsApp." name="description"/>
+<meta content="Le Bontà Italiane | Cialde, capsule, vini, liquori, panettoni e pellet" property="og:title"/>
+<meta content="Scopri Le Bontà Italiane: cialde e capsule di caffè, macchine da caffè, vini, liquori, panettoni Fiasconaro e pellet." property="og:description"/>
 <title>Le Bontà Italiane | Catalogo</title>
 <style>
 
@@ -239,7 +241,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   const photoURL = s => ASSETS[s] || s || '';
   const iconWhatsApp = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M20 11.6a8 8 0 0 1-11.7 7.1l-4.4 1.1L5 15.6a8 8 0 1 1 15-4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.7 8.9c-.5.4-.6 1.1-.2 2.2.9 2.3 3.4 4.3 5.7 4.4 1.1 0 1.9-.7 1.9-1.2 0-.3-1.9-1.3-2.2-1.2l-.9 1c-1.1-.4-2.2-1.5-2.6-2.5l.9-.9c0-.4-.8-1.9-1.1-1.9-.5 0-1.1.1-1.7.5Z" fill="currentColor"/></svg>';
   const bySlug = s => CATS.find(c => c.slug === s);
-  const categoryOrder = list => {const a=[...list];return SETTINGS.categoryOrderMode==='alphabetical'?a.sort((x,y)=>String(x.title||'').localeCompare(String(y.title||''),'it',{sensitivity:'base'})):a.sort((x,y)=>(Number(x.sortOrder)||0)-(Number(y.sortOrder)||0));};
+  const categoryOrder = list => {const a=[...list];if(a.length&&!a[0].parentSlug)return a.sort((x,y)=>String(x.title||'').localeCompare(String(y.title||''),'it',{sensitivity:'base'}));return a.sort((x,y)=>(Number(x.sortOrder)||0)-(Number(y.sortOrder)||0));};
   const make = (tag, cl, tx) => { const el = document.createElement(tag); if (cl) el.className = cl; if (tx !== undefined) el.textContent = tx; return el; };
   function linkForProduct(p) {
     const cat = bySlug(p.category);
@@ -284,7 +286,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
     const body=make('div','product-body');body.append(make('h3','',p.name));
     if(p.format || p.compatibility || p.blendNote){
       const details=make('div','product-details');if((p.category||'').startsWith('cialde-') || (p.category||'').startsWith('capsule-borbone-'))details.classList.add('single-detail');
-      for (const [label,value] of [[p.category==='pellet'?'Peso':(p.category?.startsWith('macchine-') ? 'Tipologia' : 'Taglia'),p.format],[p.compatibilityLabel || (p.category==='pellet'?'Legno':'Compatibilità'),p.compatibility]]){
+      for (const [label,value] of [[p.formatLabel || (p.category==='pellet'?'Peso':(p.category?.startsWith('macchine-') ? 'Tipologia' : 'Taglia')),p.format],[p.compatibilityLabel || 'Compatibilità',p.compatibility]]){
         if(!value)continue;
         const row=make('div','product-detail');row.append(make('span','detail-key',label),make('span','detail-value',value));details.append(row);
       }
@@ -304,7 +306,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
     else{const grid=make('div','cards');items.forEach(p=>grid.append(cardFor(p)));section.append(grid);}
     root.append(section);
   }
-  function route(){closeMenu();const hash=decodeURIComponent(location.hash.slice(1))||'home';const cat=bySlug(hash);if(cat){renderCategory(cat);document.title=cat.title+' | '+(SETTINGS.siteName || 'Le Bontà Italiane')}else{renderHome();document.title=(SETTINGS.siteName || 'Le Bontà Italiane')+' | Catalogo'}window.scrollTo(0,0);}
+  function route(){closeMenu();const hash=decodeURIComponent(location.hash.slice(1))||'home';const cat=bySlug(hash);const brand=SETTINGS.siteName||'Le Bontà Italiane';const seoTitle=SETTINGS.seoTitle||brand+' | Catalogo';const seoDescription=SETTINGS.seoDescription||'Scopri il catalogo Le Bontà Italiane e chiedi informazioni su WhatsApp.';const meta=document.querySelector('meta[name="description"]');if(meta)meta.setAttribute('content',seoDescription);const ogTitle=document.querySelector('meta[property="og:title"]');if(ogTitle)ogTitle.setAttribute('content',cat?cat.title+' | '+brand:seoTitle);const ogDescription=document.querySelector('meta[property="og:description"]');if(ogDescription)ogDescription.setAttribute('content',seoDescription);if(cat){renderCategory(cat);document.title=cat.title+' | '+brand}else{renderHome();document.title=seoTitle}window.scrollTo(0,0);}
   async function loadPublishedCatalog(){
     try {
       const key='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsa3h4dW14YWtraW9wem5nY2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MzkzMjYsImV4cCI6MjEwODQxNTMyNn0.z2KTD-8_7soPOtIHevh7JIBitg0aVaeofSFHT8-GTQo';
