@@ -296,7 +296,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   function renderCategory(c){
     const root=$('site-main');root.replaceChildren();
     const section=make('div','container listing');const hero=make('section','listing-hero');const copy=make('div','listing-hero-copy');
-    const crumbs=[];let current=c,seen=new Set();while(current&&!seen.has(current.slug)){seen.add(current.slug);crumbs.unshift(current.title);current=CATS.find(x=>x.slug===current.parentSlug);}const crumbText='Home  ›  '+(crumbs.length?crumbs.join('  ›  '):((c.parent||'Catalogo')+(c.child?'  ›  '+c.child:''));copy.append(make('span','section-kicker','Catalogo · Le Bontà Italiane'),make('h1','',c.title),make('p','breadcrumbs',crumbText));
+    const crumbs=[];let current=c,seen=new Set();while(current&&!seen.has(current.slug)){seen.add(current.slug);crumbs.unshift(current.title);current=CATS.find(x=>x.slug===current.parentSlug);}const crumbText='Home  ›  '+(crumbs.length?crumbs.join('  ›  '):((c.parent||'Catalogo')+(c.child?'  ›  '+c.child:'')));copy.append(make('span','section-kicker','Catalogo · Le Bontà Italiane'),make('h1','',c.title),make('p','breadcrumbs',crumbText));
     hero.append(copy);section.append(hero);
     const items=(PRODUCTS[c.slug]||[]);
     const caption=make('div','listing-caption');const ct=make('div');ct.append(make('span','section-kicker','La nostra selezione'),make('h2','','I nostri prodotti'));caption.append(ct,make('span','count-pill',items.length+' '+(items.length===1?'prodotto':'prodotti')));section.append(caption);
