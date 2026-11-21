@@ -344,4 +344,62 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   loadPublishedCatalog();
 })();
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+  try {
+    if (navigator.doNotTrack === '1' || window.doNotTrack === '1') return;
+    const client = window.supabase.createClient(
+      'https://plkxxumxakkiopzngccz.supabase.co',
+      'sb_publishable_LZtYXRnLbyfA_dIdB3Jgig_Vb_UWmod'
+    );
+    const makeId = () => (window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+          const r = Math.random() * 16 | 0;
+          return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+        });
+    const getSessionId = key => {
+      let value = sessionStorage.getItem(key);
+      if (!value) { value = makeId(); sessionStorage.setItem(key, value); }
+      return value;
+    };
+    const visitorId = getSessionId('lbi_analytics_visitor');
+    const sessionId = getSessionId('lbi_analytics_session');
+    let lastPath = '';
+    const recordPage = async () => {
+      const pagePath = (location.pathname + location.hash).slice(0, 500);
+      if (pagePath === lastPath) return;
+      lastPath = pagePath;
+      let referrerHost = null;
+      try { if (document.referrer) referrerHost = new URL(document.referrer).hostname.slice(0, 255); } catch (_) {}
+      const ua = navigator.userAgent || '';
+      const deviceType = /iPad|Tablet|PlayBook|Silk/i.test(ua) ? 'tablet'
+        : /Mobi|Android|iPhone|iPod/i.test(ua) ? 'mobile'
+        : 'desktop';
+      const browser = /Edg\//.test(ua) ? 'Edge'
+        : /SamsungBrowser\//.test(ua) ? 'Samsung Internet'
+        : /Firefox\//.test(ua) ? 'Firefox'
+        : /Chrome\//.test(ua) ? 'Chrome'
+        : /Safari\//.test(ua) ? 'Safari' : 'Other';
+      const { error } = await client.from('site_analytics_events').insert({
+        visitor_id: visitorId,
+        session_id: sessionId,
+        page_path: pagePath || '/',
+        referrer_host: referrerHost,
+        device_type: deviceType,
+        browser
+      });
+      if (error) console.debug('Statistiche non disponibili:', error.message);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', recordPage, { once: true });
+    else recordPage();
+    window.addEventListener('hashchange', recordPage);
+  } catch (error) {
+    console.debug('Statistiche non inizializzate:', error);
+  }
+})();
+</script>
+
 </body></html>
