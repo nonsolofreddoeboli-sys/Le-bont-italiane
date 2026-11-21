@@ -50,12 +50,31 @@ button,.menu-select,.field input,.field select{min-height:46px}
  .actions button{padding:9px 8px}
 }
 
+
+.analytics-controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.analytics-controls select{border:1px solid #dce5dd;border-radius:10px;padding:10px 12px;background:#fbfcfa;color:#24352a;min-height:44px}
+.analytics-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0}
+.analytics-stat{background:#f7faf6;border:1px solid #e2eae2;border-radius:13px;padding:15px;min-width:0}
+.analytics-stat small{display:block;color:#718075;font-size:12px}
+.analytics-stat strong{display:block;font-size:25px;color:#173b2b;margin-top:5px;overflow-wrap:anywhere}
+.analytics-chart{display:flex;align-items:end;gap:7px;height:155px;padding:14px 8px 5px;border-bottom:1px solid #e2eae2}
+.analytics-day{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:end;height:100%;gap:6px}
+.analytics-bar{width:min(100%,28px);min-height:3px;background:#347451;border-radius:6px 6px 2px 2px}
+.analytics-day small{font-size:10px;color:#718075;white-space:nowrap}
+.analytics-columns{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.analytics-list{display:grid;gap:8px}
+.analytics-line{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:8px 0;border-bottom:1px solid #edf1ed}
+.analytics-line span:first-child{overflow-wrap:anywhere;color:#46564a}
+.analytics-line strong{white-space:nowrap;color:#173b2b}
+.analytics-note{font-size:12px;color:#758176;line-height:1.5;margin-top:12px}
+@media(max-width:600px){.analytics-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.analytics-stat{padding:12px}.analytics-stat strong{font-size:22px}.analytics-columns{grid-template-columns:1fr}.analytics-chart{gap:3px;padding-left:2px;padding-right:2px}}
+
 </style>
 </head>
 <body>
 <header class="top">
  <a class="brand" href="/" aria-label="Torna alla home Le Bontà Italiane"><span class="brand-mark">✦</span><span>Le Bontà Italiane<small>GESTIONALE</small></span></a>
- <div class="top-right"><a class="home-link" href="/">← Torna al sito</a><select class="menu-select" id="quickMenu" aria-label="Menu gestionale"><option value="">☰ Menu gestionale</option><option value="categories">Categorie</option><option value="products">Prodotti</option><option value="offers">Offerte</option><option value="media">Immagini</option><option value="settings">Impostazioni</option><option value="users">Utenti</option></select></div>
+ <div class="top-right"><a class="home-link" href="/">← Torna al sito</a><select class="menu-select" id="quickMenu" aria-label="Menu gestionale"><option value="">☰ Menu gestionale</option><option value="categories">Categorie</option><option value="products">Prodotti</option><option value="offers">Offerte</option><option value="media">Immagini</option><option value="settings">Impostazioni</option><option value="users">Utenti</option><option value="analytics">Statistiche sito</option></select></div>
 </header>
 <main class="wrap">
  <section id="login" class="panel" style="max-width:440px;margin:50px auto">
@@ -74,6 +93,7 @@ button,.menu-select,.field input,.field select{min-height:46px}
    <article class="tile"><span class="tile-icon">▧</span><h2>Immagini</h2><p>Controlla le immagini associate ai prodotti</p><button data-open="media">Visualizza immagini</button></article>
    <article class="tile"><span class="tile-icon">⚙</span><h2>Impostazioni</h2><p>Modifica testi e informazioni del sito</p><button data-open="settings">Visualizza impostazioni</button></article>
    <article class="tile"><span class="tile-icon">♙</span><h2>Utenti</h2><p>Consulta gli accessi amministrativi</p><button data-open="users">Visualizza utenti</button></article>
+   <article class="tile"><span class="tile-icon">▥</span><h2>Statistiche sito</h2><p>Controlla visite, pagine e dispositivi</p><button data-open="analytics">Visualizza statistiche</button></article>
   </div>
   <section id="workspace" class="panel hidden">
    <div class="panel-head"><div><div class="eyebrow">Gestione contenuti</div><h2 id="viewTitle">Categorie</h2></div><div class="actions"><button class="secondary" id="backBtn">← Pannello</button><button id="addBtn">＋ Aggiungi</button></div></div>
@@ -136,7 +156,7 @@ async function loadData(){
 }
 function openView(view){
  currentView=view;if(view==='categories'||view==='products')contentFilter=contentFilter||'published';$('dashboard').classList.add('hidden');$('publishInfo').classList.add('hidden');$('workspace').classList.remove('hidden');
- const names={categories:'Categorie e sottocategorie',products:'Prodotti',offers:'Offerte',media:'Immagini prodotti',settings:'Impostazioni del sito',users:'Utenti autorizzati'};
+ const names={categories:'Categorie e sottocategorie',products:'Prodotti',offers:'Offerte',media:'Immagini prodotti',settings:'Impostazioni del sito',users:'Utenti autorizzati',analytics:'Statistiche sito web'};
  $('viewTitle').textContent=names[view]||'Gestione';$('addBtn').classList.toggle('hidden',!['categories','products','offers'].includes(view));
  $('viewTools').innerHTML=view==='products'?'<input class="search" id="searchBox" placeholder="Cerca un prodotto…">':view==='categories'?'<div class="drag-hint">Le categorie principali sul sito sono sempre in ordine alfabetico. Le sottocategorie mantengono il loro ordine.</div><input class="search" id="searchBox" placeholder="Cerca una categoria…" style="margin-top:10px">':'';
  if(view==='products'||view==='categories'){
@@ -145,10 +165,60 @@ function openView(view){
   $('showDrafts').onclick=()=>{contentFilter='draft';openView(view);};
  }
  if(view==='users'){$('addBtn').classList.add('hidden');$('viewList').innerHTML=ADMINS.map(e=>'<div class="user-row">'+esc(e)+'<small>Amministratore autorizzato</small></div>').join('');return;}
+ if(view==='analytics'){$('addBtn').classList.add('hidden');renderAnalytics();return;}
  if(view==='settings'){$('addBtn').classList.add('hidden');$('viewList').innerHTML=settingsForm();return;}
  if(view==='categories')renderCategories();if(view==='products')renderProducts();if(view==='offers')renderOffers();if(view==='media')renderMedia();
  const search=$('searchBox');if(search)search.addEventListener('input',()=>{if(view==='products')renderProducts(search.value);else renderCategories(search.value)});
 }
+
+async function renderAnalytics(){
+ const tools=$('viewTools'),list=$('viewList');
+ tools.innerHTML='<div class="analytics-controls"><label for="analyticsRange" class="muted">Periodo</label><select id="analyticsRange"><option value="1">Oggi</option><option value="7">Ultimi 7 giorni</option><option value="30" selected>Ultimi 30 giorni</option><option value="90">Ultimi 90 giorni</option></select><button type="button" id="analyticsRefresh">Aggiorna</button></div>';
+ list.innerHTML='<div class="empty">Caricamento statistiche reali…</div>';
+ const load=async()=>{
+  const days=Number($('analyticsRange').value||30);
+  const start=new Date();start.setHours(0,0,0,0);start.setDate(start.getDate()-(days-1));
+  const {data,error}=await db.from('site_analytics_events')
+   .select('created_at,visitor_id,session_id,page_path,referrer_host,device_type,browser')
+   .gte('created_at',start.toISOString()).order('created_at',{ascending:true}).limit(10000);
+  if(error){list.innerHTML='<div class="status err">Non riesco a leggere le statistiche: '+esc(error.message)+'. Verifica di essere entrato con un account amministratore.</div>';return;}
+  const rows=data||[];
+  const unique=new Set(rows.map(x=>x.visitor_id)).size;
+  const pages=new Map(),sources=new Map(),devices=new Map(),browsers=new Map(),daily=new Map();
+  rows.forEach(x=>{
+   pages.set(x.page_path,(pages.get(x.page_path)||0)+1);
+   const source=x.referrer_host||'Accesso diretto';
+   sources.set(source,(sources.get(source)||0)+1);
+   devices.set(x.device_type,(devices.get(x.device_type)||0)+1);
+   browsers.set(x.browser,(browsers.get(x.browser)||0)+1);
+   const day=new Date(x.created_at).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'});
+   daily.set(day,(daily.get(day)||0)+1);
+  });
+  const top=(map)=>[...map.entries()].sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const max=Math.max(1,...daily.values());
+  const chart=[...daily.entries()].slice(-Math.min(days,30));
+  const chartHtml=chart.length?chart.map(([day,n])=>'<div class="analytics-day" title="'+esc(day+': '+n+' visite')+'"><div class="analytics-bar" style="height:'+Math.max(3,Math.round(n/max*112))+'px"></div><small>'+esc(day)+'</small></div>').join(''):'<div class="empty">Ancora nessuna visita registrata nel periodo.</div>';
+  const lines=(arr)=>arr.length?arr.map(([k,v])=>'<div class="analytics-line"><span>'+esc(k)+'</span><strong>'+v+'</strong></div>').join(''):'<div class="muted">Nessun dato disponibile</div>';
+  list.innerHTML=
+   '<div class="analytics-grid">'+
+    '<div class="analytics-stat"><small>Visite / pagine viste</small><strong>'+rows.length.toLocaleString('it-IT')+'</strong></div>'+
+    '<div class="analytics-stat"><small>Visitatori unici stimati</small><strong>'+unique.toLocaleString('it-IT')+'</strong></div>'+
+    '<div class="analytics-stat"><small>Pagine consultate</small><strong>'+pages.size.toLocaleString('it-IT')+'</strong></div>'+
+   '</div>'+
+   '<div class="panel" style="margin:0"><div class="panel-head"><h2>Andamento visite</h2><span class="eyebrow">Per giorno</span></div><div class="analytics-chart">'+chartHtml+'</div></div>'+
+   '<div class="analytics-columns">'+
+    '<div class="panel" style="margin:0"><h2>Pagine più visitate</h2><div class="analytics-list">'+lines(top(pages))+'</div></div>'+
+    '<div class="panel" style="margin:0"><h2>Provenienza</h2><div class="analytics-list">'+lines(top(sources))+'</div></div>'+
+    '<div class="panel" style="margin:0"><h2>Dispositivi</h2><div class="analytics-list">'+lines(top(devices))+'</div></div>'+
+    '<div class="panel" style="margin:0"><h2>Browser</h2><div class="analytics-list">'+lines(top(browsers))+'</div></div>'+
+   '</div>'+
+   '<p class="analytics-note">I dati iniziano dal momento in cui il monitoraggio viene pubblicato. Il conteggio dei visitatori è una stima basata sulla sessione del browser; non vengono raccolti indirizzi IP, nomi o email. Il sistema rispetta l’impostazione “Do Not Track” del browser. I risultati sono limitati agli ultimi 10.000 eventi del periodo selezionato.</p>';
+ };
+ $('analyticsRange').onchange=load;
+ $('analyticsRefresh').onclick=load;
+ await load();
+}
+
 function renderCategories(q=''){
  const rows=orderedCategories().filter(c=>(c.published!==false)===(contentFilter==='published')&&(categoryPath(c)+' '+c.parent+' '+c.child).toLowerCase().includes(q.toLowerCase()));
  $('viewList').innerHTML='<div class="drag-hint">Trascina le sottocategorie con il dito per riordinarle all’interno del loro gruppo. Le categorie principali restano sempre in ordine alfabetico.</div>'+rows.map(c=>'<div class="item cat-row" data-cat-row="'+esc(c.slug)+'" style="margin-left:'+Math.min(categoryDepth(c.slug)*12,48)+'px">'+(c.parentSlug?'<span class="drag-handle" data-drag-handle="'+esc(c.slug)+'" title="Trascina per riordinare">⠿</span>':'<span class="drag-handle" aria-label="Ordine alfabetico fisso" title="Categoria principale in ordine alfabetico">A–Z</span>')+'<div class="item-main"><strong>'+esc(c.title)+'</strong><small>'+esc(categoryPath(c))+'</small></div><div class="item-menu"><button class="dots-btn" data-cat-menu="'+esc(c.slug)+'" aria-label="Altre azioni">⋯</button><div class="dots-pop hidden" data-cat-pop="'+esc(c.slug)+'"><button data-cat-view="'+esc(c.slug)+'">Anteprima</button><button data-cat-edit="'+esc(c.slug)+'">Modifica</button><button data-cat-toggle="'+esc(c.slug)+'">'+(c.published===false?'Rendi visibile':'Sposta in bozza')+'</button><button class="danger" data-cat-delete="'+esc(c.slug)+'">Elimina</button></div></div></div>').join('')||'<div class="empty">Nessuna categoria trovata.</div>';
