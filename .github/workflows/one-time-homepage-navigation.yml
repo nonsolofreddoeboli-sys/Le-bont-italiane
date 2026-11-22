@@ -1,0 +1,82 @@
+name: Apply homepage original navigation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/one-time-homepage-navigation.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.event.head_commit.message == 'Add one-time workflow to apply homepage navigation'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: main
+      - name: Apply homepage menu change
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("index.html")
+          s = p.read_text()
+          assert 'id="drawer-nav"' in s and 'id="site-menu"' in s
+          start = s.index('  function renderHome(){')
+          end = s.index('\n  function cardFor(p){', start)
+          new_home = """  function renderHome(){
+              document.body.classList.add('home-page');
+              const root=$('site-main');root.replaceChildren();
+              const shell=make('section','container home-categories');
+              shell.setAttribute('aria-labelledby','home-categories-title');
+              shell.append(make('h1','home-categories-title','Le nostre categorie'));
+              // Riutilizza il menu originale: stesso nodo, stessa gerarchia e stessi gestori.
+              const nav=$('drawer-nav');
+              shell.append(nav);
+              root.append(shell);
+            }"""
+          s = s[:start] + new_home + s[end:]
+          old = """function route(){closeMenu();const hash=decodeURIComponent(location.hash.slice(1))||'home';const cat=bySlug(hash);const brand=SETTINGS.siteName||'Le Bontà Italiane';const seoTitle=SETTINGS.seoTitle||brand+' | Catalogo';const seoDescription=SETTINGS.seoDescription||'Scopri il catalogo Le Bontà Italiane e chiedi informazioni su WhatsApp.';const meta=document.querySelector('meta[name="description"]');if(meta)meta.setAttribute('content',seoDescription);const ogTitle=document.querySelector('meta[property="og:title"]');if(ogTitle)ogTitle.setAttribute('content',cat?cat.title+' | '+brand:seoTitle);const ogDescription=document.querySelector('meta[property="og:description"]');if(ogDescription)ogDescription.setAttribute('content',seoDescription);if(cat){renderCategory(cat);document.title=cat.title+' | '+brand}else{renderHome();document.title=seoTitle}window.scrollTo(0,0);}"""
+          new = """function route(){closeMenu();const hash=decodeURIComponent(location.hash.slice(1))||'home';const cat=bySlug(hash);const brand=SETTINGS.siteName||'Le Bontà Italiane';const seoTitle=SETTINGS.seoTitle||brand+' | Catalogo';const seoDescription=SETTINGS.seoDescription||'Scopri il catalogo Le Bontà Italiane e chiedi informazioni su WhatsApp.';const meta=document.querySelector('meta[name="description"]');if(meta)meta.setAttribute('content',seoDescription);const ogTitle=document.querySelector('meta[property="og:title"]');if(ogTitle)ogTitle.setAttribute('content',cat?cat.title+' | '+brand:seoTitle);const ogDescription=document.querySelector('meta[property="og:description"]');if(ogDescription)ogDescription.setAttribute('content',seoDescription);if(cat){document.body.classList.remove('home-page');const nav=$('drawer-nav');const drawerBottom=$('site-menu').querySelector('.drawer-bottom');if(drawerBottom&&nav.parentElement!==$('site-menu'))$('site-menu').insertBefore(nav,drawerBottom);renderCategory(cat);document.title=cat.title+' | '+brand}else{renderHome();document.title=seoTitle}window.scrollTo(0,0);}"""
+          assert old in s, "route anchor missing; no source changes written"
+          s = s.replace(old, new, 1)
+          css = """
+          /* Homepage: mostra il menu di navigazione originale senza duplicarlo. */
+          body.home-page .menu-toggle{display:none!important}
+          body.home-page .home-categories{padding:28px 0 42px;min-height:calc(100vh - 210px)}
+          body.home-page .home-categories-title{margin:0 0 18px;color:var(--espresso);font:600 clamp(28px,4vw,38px)/1.2 var(--sans);letter-spacing:-.02em}
+          body.home-page .home-categories .drawer-nav{display:block;flex:initial;padding:12px 24px 22px;background:var(--espresso);border-radius:18px}
+          """
+          s = s.replace("</style>", css + "\n</style>", 1)
+          p.write_text(s)
+          print("Updated index.html", p.stat().st_size)
+          PY
+      - name: Validate JavaScript and whitespace
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s = Path("index.html").read_text()
+          blocks = []
+          for m in re.finditer('<script([^>]*)>(.*?)</script>', s, re.I | re.S):
+              attrs = m.group(1).lower()
+              if 'application/json' not in attrs and 'src=' not in attrs:
+                  blocks.append(m.group(2))
+          Path('/tmp/site-inline.js').write_text('\n'.join(blocks))
+          assert 'id="drawer-nav"' in s
+          assert "const nav=$('drawer-nav')" in s
+          print("Inline scripts:", len(blocks))
+          PY
+          node --check /tmp/site-inline.js
+          git diff --check
+      - name: Commit and push homepage change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Move original navigation menu to homepage"
+          git push origin main
