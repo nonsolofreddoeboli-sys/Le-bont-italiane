@@ -7,7 +7,9 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="only light" name="color-scheme"/>
 <meta content="#ffffff" name="theme-color"/>
-<meta content="Le Bontà Italiane — Cialde, capsule, macchine da caffè e pellet. Consulta il catalogo e chiedi informazioni su WhatsApp." name="description"/>
+<meta content="Scopri Le Bontà Italiane: cialde e capsule di caffè, macchine da caffè, vini, liquori, panettoni Fiasconaro e pellet. Consulta il catalogo e chiedi informazioni su WhatsApp." name="description"/>
+<meta content="Le Bontà Italiane | Cialde, capsule, vini, liquori, panettoni e pellet" property="og:title"/>
+<meta content="Scopri Le Bontà Italiane: cialde e capsule di caffè, macchine da caffè, vini, liquori, panettoni Fiasconaro e pellet." property="og:description"/>
 <title>Le Bontà Italiane | Catalogo</title>
 <style>
 
@@ -35,13 +37,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .brand img{height:auto;width:100%;object-fit:contain;mix-blend-mode:multiply}
 .menu-toggle{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;flex:0 0 auto;width:57px;height:57px;border:1.8px solid var(--espresso);border-radius:16px;background:#fff;box-shadow:none;transition:background .2s,border-color .2s}
 .menu-toggle:hover{background:#f8f3ee}.menu-toggle i{display:block;width:25px;height:2.5px;background:var(--espresso);border-radius:2px}
+.menu-toggle{width:auto;min-width:82px;padding:0 16px;flex-direction:row;border-radius:12px}.menu-toggle i{display:none!important}.menu-toggle span{font:700 14px/1 var(--sans);letter-spacing:.02em;color:var(--espresso);text-transform:none}
 /* HOME — SOLO L'OFFERTA, SENZA FOTO O ALTRE SEZIONI */
 .home{min-height:0;padding:43px 0 52px}
 .hero-wrap{width:100%;padding:0}
-.hero{position:relative;isolation:isolate;overflow:hidden;min-height:470px;background:var(--espresso);border-radius:30px;border:1px solid rgba(62,35,25,.25);display:flex;align-items:center}
+.hero{position:relative;isolation:isolate;overflow:hidden;min-height:340px;background:#fff;border-radius:22px;border:3px solid #75472e;display:flex;align-items:stretch;justify-content:center;padding:8px}.hero.offer-empty{background:#fff}.hero-photo{display:block;width:100%;height:100%;min-height:320px;max-height:520px;object-fit:contain;border-radius:14px}
 .hero:before{content:'';position:absolute;top:-170px;right:-155px;width:510px;height:510px;border:1px solid rgba(233,205,174,.12);border-radius:50%;z-index:-1}
 .hero:after{content:'';position:absolute;top:-95px;right:-82px;width:360px;height:360px;border:1px solid rgba(233,205,174,.12);border-radius:50%;z-index:-1}
-.hero-image,.home-category-area,.story{display:none!important}
+.hero-image,.home-category-area,.story{display:none!important}.hero-copy{display:none!important}
 .hero-copy{width:100%;padding:64px clamp(30px,6vw,86px) 70px;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:flex-start;max-width:930px}
 .hero .section-kicker{color:#eac4a0;display:flex;align-items:center;gap:15px;letter-spacing:.30em}
 .hero .section-kicker:before{content:'';height:1px;width:34px;background:#eac4a0}
@@ -205,66 +208,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .footer .footer-whatsapp{font-weight:700!important}
 @media(max-width:570px){.product-details{min-height:auto}.product-body h3{font-size:19px!important}}
 .product-details.single-detail{min-height:0!important}
-
-/* HOMEPAGE CATEGORIE — navigazione diretta e leggibile */
-body.home-page .menu-toggle{display:none!important}
-.home-categories{padding:34px 0 48px;min-height:calc(100vh - 221px)}
-.home-categories .home-categories-title{
-  margin:0 0 22px;color:var(--espresso);
-  font:600 clamp(28px,4vw,38px)/1.2 var(--sans);
-  letter-spacing:-.02em
-}
-.home-category-list{display:grid;grid-template-columns:1fr;gap:11px}
-.home-category{border:1px solid #dfcfc2;border-radius:13px;background:#fff;overflow:hidden}
-.home-category-toggle{
-  display:flex;align-items:center;justify-content:space-between;gap:18px;
-  width:100%;min-height:66px;padding:16px 20px;border:0;background:#fff;
-  color:var(--espresso);text-align:left
-}
-.home-category-toggle:hover,.home-category-toggle[aria-expanded="true"]{background:#faf6f2}
-.home-category-name{font:600 21px/1.25 var(--sans)}
-.home-category-arrow{flex:0 0 auto;color:var(--coffee-mid);font:400 26px/1 var(--sans)}
-.home-category-children{padding:0 18px 15px 25px;background:#fff}
-.home-category-link{
-  display:block;margin-top:7px;padding:13px 14px;border-left:3px solid #c99c6d;
-  border-radius:0 8px 8px 0;background:#faf7f4;color:var(--espresso);
-  font:500 16px/1.4 var(--sans)
-}
-.home-category-link:hover,.home-category-link:focus-visible{background:#f1e7df}
-.home-subgroup{margin-top:8px;border:1px solid #e7dcd4;border-radius:9px;overflow:hidden}
-.home-subgroup-toggle{
-  display:flex;align-items:center;justify-content:space-between;gap:14px;
-  width:100%;min-height:49px;padding:12px 14px;border:0;background:#fff;
-  color:var(--espresso);text-align:left;font:600 16px/1.35 var(--sans)
-}
-.home-subgroup-toggle[aria-expanded="true"]{background:#faf7f4}
-.home-subgroup-arrow{font:400 21px/1 var(--sans);color:var(--coffee-mid)}
-.home-subgroup-children{padding:0 12px 12px;background:#faf7f4}
-.home-subgroup-children .home-category-link{margin-top:7px;background:#fff}
-@media(max-width:570px){
-  .home-categories{padding:25px 0 32px;min-height:calc(100vh - 220px)}
-  .home-categories .home-categories-title{font-size:29px;margin-bottom:17px}
-  .home-category-list{gap:9px}
-  .home-category-toggle{min-height:62px;padding:15px 16px}
-  .home-category-name{font-size:19px}
-  .home-category-children{padding:0 12px 13px 16px}
-  .home-category-link{font-size:15px;padding:13px 12px}
-}
-
-
-
-/* HOMEPAGE: il menu originale viene mostrato direttamente sotto il titolo.
-   Nessuna ricostruzione della navigazione: si riutilizza #drawer-nav. */
-body.home-page .home-categories{padding-top:28px;padding-bottom:42px;min-height:calc(100vh - 210px)}
-body.home-page .home-categories .home-categories-title{margin:0 0 18px;color:var(--espresso);font:600 clamp(28px,4vw,38px)/1.2 var(--sans);letter-spacing:-.02em}
-body.home-page .home-categories .drawer-nav{display:block;flex:initial;padding:12px 24px 22px;background:var(--espresso);border-radius:18px}
-body.home-page .menu-toggle{display:none!important}
 </style>
 </head>
 <body>
 <header class="header"><div class="container header-inner">
 <a aria-label="Torna alla Home di Le Bontà Italiane" class="brand" href="#home"><img alt="Le Bontà Italiane" id="header-logo"/></a>
-<button aria-controls="site-menu" aria-expanded="false" aria-label="Apri il menu delle categorie" class="menu-toggle" id="menu-open" type="button"><i></i><i></i><i></i></button>
+<button aria-controls="site-menu" aria-expanded="false" aria-label="Apri il menù delle categorie" class="menu-toggle" id="menu-open" type="button"><span>menù</span></button>
 </div></header>
 <main id="site-main"></main>
 <footer aria-label="Contatti Le Bontà Italiane" class="footer"><div class="container footer-inner">
@@ -284,15 +233,16 @@ body.home-page .menu-toggle{display:none!important}
 <script>(() => {
   'use strict';
   const payload = JSON.parse(document.getElementById('catalog-data').textContent);
-  const CATS = payload.categories || [];
-  const PRODUCTS = payload.products || {};
+  let CATS = (payload.categories || []).filter(c => c.published !== false);
+  let PRODUCTS = Object.fromEntries(Object.entries(payload.products || {}).map(([slug,items]) => [slug,(Array.isArray(items)?items:[]).filter(p => p.published !== false)]));
   const ASSETS = payload.assets || {};
-  const SETTINGS = payload.settings || {};
+  let SETTINGS = payload.settings || {};
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, x => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
   const photoURL = s => ASSETS[s] || s || '';
   const iconWhatsApp = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M20 11.6a8 8 0 0 1-11.7 7.1l-4.4 1.1L5 15.6a8 8 0 1 1 15-4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.7 8.9c-.5.4-.6 1.1-.2 2.2.9 2.3 3.4 4.3 5.7 4.4 1.1 0 1.9-.7 1.9-1.2 0-.3-1.9-1.3-2.2-1.2l-.9 1c-1.1-.4-2.2-1.5-2.6-2.5l.9-.9c0-.4-.8-1.9-1.1-1.9-.5 0-1.1.1-1.7.5Z" fill="currentColor"/></svg>';
   const bySlug = s => CATS.find(c => c.slug === s);
+  const categoryOrder = list => {const a=[...list];if(a.length&&!a[0].parentSlug)return a.sort((x,y)=>String(x.title||'').localeCompare(String(y.title||''),'it',{sensitivity:'base'}));return a.sort((x,y)=>(Number(x.sortOrder)||0)-(Number(y.sortOrder)||0));};
   const make = (tag, cl, tx) => { const el = document.createElement(tag); if (cl) el.className = cl; if (tx !== undefined) el.textContent = tx; return el; };
   function linkForProduct(p) {
     const cat = bySlug(p.category);
@@ -302,43 +252,16 @@ body.home-page .menu-toggle{display:none!important}
   }
   function setImage(img,key) {img.src = photoURL(key); img.loading = 'lazy'; img.decoding = 'async';}
   function menu() {
-    const nav = $('drawer-nav'); nav.replaceChildren();
-    const parents = [...new Set(CATS.map(c => c.parent || 'Catalogo'))];
-    for(const parent of parents) {
-      const entries = CATS.filter(c => (c.parent || 'Catalogo') === parent);
-      const group = make('div','drawer-group');
-      if (entries.length === 1 && !entries[0].child) {
-        const a = make('a','drawer-direct',parent); a.href='#'+encodeURIComponent(entries[0].slug);group.append(a);nav.append(group);continue;
-      }
-      const toggle = make('button','drawer-parent'); toggle.type='button';toggle.setAttribute('aria-expanded','false');
-      toggle.append(make('span','',parent),make('span','drawer-arrow','⌄'));
-      const inside = make('div','drawer-children');inside.hidden=true;
-      toggle.addEventListener('click',()=>{const next=inside.hidden;inside.hidden=!next;toggle.setAttribute('aria-expanded',String(next));});
-      group.append(toggle,inside); nav.append(group);
-      const subGroupNames = [...new Set(entries.filter(c=>(c.child||'').includes(' · ')).map(c=>c.child.split(' · ')[0].trim()))];
-      const hasChildrenFor = brand => entries.some(c=>(c.child||'').startsWith(brand+' · '));
-      const seenSub = new Set();
-      for (const c of entries) {
-        const child=c.child || c.title || c.parent;
-        if (subGroupNames.includes(child) && hasChildrenFor(child))continue;
-        if (child.includes(' · ')){
-          const [brand] = child.split(' · ');
-          if (!seenSub.has(brand)) {
-            seenSub.add(brand);
-            const wrap=make('div','drawer-subgroup');const b=make('button','drawer-subparent');b.type='button'; b.setAttribute('aria-expanded','false');
-            b.append(make('span','',brand),make('span','drawer-arrow','⌄'));
-            const subs=make('div','drawer-subchildren');subs.hidden=true;
-            b.addEventListener('click',()=>{const next=subs.hidden;subs.hidden=!next;b.setAttribute('aria-expanded',String(next));});
-            wrap.append(b,subs);inside.append(wrap);
-            for (const sc of entries.filter(x=>(x.child||'').startsWith(brand+' · '))) {
-              const a=make('a','',sc.child.slice(brand.length+3));a.href='#'+encodeURIComponent(sc.slug);subs.append(a);
-            }
-          }
-        } else {
-          const a = make('a','',child);a.href='#'+encodeURIComponent(c.slug);inside.append(a);
-        }
-      }
+    const nav=$('drawer-nav');nav.replaceChildren();
+    const roots=categoryOrder(CATS.filter(c=>!c.parentSlug)),groups=new Map();
+    roots.forEach(c=>{const key=c.parent||c.title||'Catalogo';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(c);});
+    function addNode(container,c,depth=0){
+      const children=categoryOrder(CATS.filter(x=>x.parentSlug===c.slug)),label=c.child&&!c.parentSlug?c.child:c.title;
+      if(!children.length){const a=make('a',depth?'':'drawer-direct',label);a.href='#'+encodeURIComponent(c.slug);container.append(a);return;}
+      const wrap=make('div',depth?'drawer-subgroup':'drawer-group'),toggle=make('button',depth?'drawer-subparent':'drawer-parent');toggle.type='button';toggle.setAttribute('aria-expanded','false');toggle.append(make('span','',label),make('span','drawer-arrow','⌄'));
+      const inside=make('div',depth?'drawer-subchildren':'drawer-children');inside.hidden=true;toggle.addEventListener('click',()=>{const next=inside.hidden;inside.hidden=!next;toggle.setAttribute('aria-expanded',String(next));});wrap.append(toggle,inside);container.append(wrap);children.forEach(ch=>addNode(inside,ch,depth+1));
     }
+    for(const [group,entries] of groups){const wrap=make('div','drawer-group');if(entries.length===1&&!entries[0].child){if(CATS.some(x=>x.parentSlug===entries[0].slug)){addNode(nav,entries[0],0);continue;}const a=make('a','drawer-direct',group);a.href='#'+encodeURIComponent(entries[0].slug);wrap.append(a);nav.append(wrap);continue;}const toggle=make('button','drawer-parent');toggle.type='button';toggle.setAttribute('aria-expanded','false');toggle.append(make('span','',group),make('span','drawer-arrow','⌄'));const inside=make('div','drawer-children');inside.hidden=true;toggle.addEventListener('click',()=>{const next=inside.hidden;inside.hidden=!next;toggle.setAttribute('aria-expanded',String(next));});wrap.append(toggle,inside);nav.append(wrap);entries.forEach(c=>addNode(inside,c,0));}
     nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMenu));
   }
   const drawer=$('site-menu'); const overlay=$('overlay');
@@ -347,15 +270,13 @@ body.home-page .menu-toggle{display:none!important}
   $('menu-open').addEventListener('click',openMenu);$('menu-close').addEventListener('click',()=>{closeMenu();$('menu-open').focus();});overlay.addEventListener('click',closeMenu);
   document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&drawer.classList.contains('open'))closeMenu()});
   function renderHome(){
-    document.body.classList.add('home-page');
     const root=$('site-main');root.replaceChildren();
-    const shell=make('section','container home-categories');
-    shell.setAttribute('aria-labelledby','home-categories-title');
-    shell.append(make('h1','home-categories-title','Le nostre categorie'));
-    // Riutilizza il menu originale: stesso nodo, stessa gerarchia e stessi gestori.
-    const nav=$('drawer-nav');
-    shell.append(nav);
-    root.append(shell);
+    const shell=make('div','container home');const section=make('section','hero-wrap');section.setAttribute('aria-label','Sezione offerte');
+    const hero=make('div','hero offer-empty');
+    if(SETTINGS.offerImage){
+      const img=make('img','hero-photo');setImage(img,SETTINGS.offerImage);img.alt='Offerta';hero.append(img);
+    }
+    section.append(hero);shell.append(section);root.append(shell);
   }
   function cardFor(p){
     const card=make('article','product-card');const photo=make('div','product-photo');
@@ -366,7 +287,7 @@ body.home-page .menu-toggle{display:none!important}
     const body=make('div','product-body');body.append(make('h3','',p.name));
     if(p.format || p.compatibility || p.blendNote){
       const details=make('div','product-details');if((p.category||'').startsWith('cialde-') || (p.category||'').startsWith('capsule-borbone-'))details.classList.add('single-detail');
-      for (const [label,value] of [[p.category==='pellet'?'Peso':(p.category?.startsWith('macchine-') ? 'Tipologia' : 'Taglia'),p.format],[p.category==='pellet'?'Legno':'Compatibilità',p.compatibility]]){
+      for (const [label,value] of [[p.formatLabel || (p.category==='pellet'?'Peso':(p.category?.startsWith('macchine-') ? 'Tipologia' : 'Taglia')),p.format],[p.compatibilityLabel || 'Compatibilità',p.compatibility]]){
         if(!value)continue;
         const row=make('div','product-detail');row.append(make('span','detail-key',label),make('span','detail-value',value));details.append(row);
       }
@@ -378,7 +299,7 @@ body.home-page .menu-toggle{display:none!important}
   function renderCategory(c){
     const root=$('site-main');root.replaceChildren();
     const section=make('div','container listing');const hero=make('section','listing-hero');const copy=make('div','listing-hero-copy');
-    copy.append(make('span','section-kicker','Catalogo · Le Bontà Italiane'),make('h1','',c.title),make('p','breadcrumbs',`Home  ›  ${c.parent}${c.child?'  ›  '+c.child:''}`));
+    const crumbs=[];let current=c,seen=new Set();while(current&&!seen.has(current.slug)){seen.add(current.slug);crumbs.unshift(current.title);current=CATS.find(x=>x.slug===current.parentSlug);}const crumbText='Home  ›  '+(crumbs.length?crumbs.join('  ›  '):((c.parent||'Catalogo')+(c.child?'  ›  '+c.child:'')));copy.append(make('span','section-kicker','Catalogo · Le Bontà Italiane'),make('h1','',c.title),make('p','breadcrumbs',crumbText));
     hero.append(copy);section.append(hero);
     const items=(PRODUCTS[c.slug]||[]);
     const caption=make('div','listing-caption');const ct=make('div');ct.append(make('span','section-kicker','La nostra selezione'),make('h2','','I nostri prodotti'));caption.append(ct,make('span','count-pill',items.length+' '+(items.length===1?'prodotto':'prodotti')));section.append(caption);
@@ -386,22 +307,31 @@ body.home-page .menu-toggle{display:none!important}
     else{const grid=make('div','cards');items.forEach(p=>grid.append(cardFor(p)));section.append(grid);}
     root.append(section);
   }
-  function route(){
-    closeMenu();
-    const hash=decodeURIComponent(location.hash.slice(1))||'home';
-    const cat=bySlug(hash);
-    if(cat){
-      document.body.classList.remove('home-page');
-      const nav=$('drawer-nav');
-      const drawerBottom=$('site-menu').querySelector('.drawer-bottom');
-      if(drawerBottom && nav.parentElement!==$('site-menu')) $('site-menu').insertBefore(nav,drawerBottom);
-      renderCategory(cat);
-      document.title=cat.title+' | '+(SETTINGS.siteName || 'Le Bontà Italiane');
-    }else{
-      renderHome();
-      document.title=(SETTINGS.siteName || 'Le Bontà Italiane')+' | Catalogo';
+  function route(){closeMenu();const hash=decodeURIComponent(location.hash.slice(1))||'home';const cat=bySlug(hash);const brand=SETTINGS.siteName||'Le Bontà Italiane';const seoTitle=SETTINGS.seoTitle||brand+' | Catalogo';const seoDescription=SETTINGS.seoDescription||'Scopri il catalogo Le Bontà Italiane e chiedi informazioni su WhatsApp.';const meta=document.querySelector('meta[name="description"]');if(meta)meta.setAttribute('content',seoDescription);const ogTitle=document.querySelector('meta[property="og:title"]');if(ogTitle)ogTitle.setAttribute('content',cat?cat.title+' | '+brand:seoTitle);const ogDescription=document.querySelector('meta[property="og:description"]');if(ogDescription)ogDescription.setAttribute('content',seoDescription);if(cat){renderCategory(cat);document.title=cat.title+' | '+brand}else{renderHome();document.title=seoTitle}window.scrollTo(0,0);}
+  async function loadPublishedCatalog(){
+    try {
+      const key='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsa3h4dW14YWtraW9wem5nY2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MzkzMjYsImV4cCI6MjEwODQxNTMyNn0.z2KTD-8_7soPOtIHevh7JIBitg0aVaeofSFHT8-GTQo';
+      const response=await fetch('https://plkxxumxakkiopzngccz.supabase.co/rest/v1/site_content?select=categories,products,settings&id=eq.true',{
+        headers:{apikey:key,Authorization:'Bearer '+key},
+        cache:'no-store'
+      });
+      if(!response.ok) throw new Error('Catalog API returned '+response.status);
+      const rows=await response.json();
+      if(!Array.isArray(rows)||!rows.length)return;
+      const data=rows[0];
+      if(Array.isArray(data.categories))CATS=data.categories.filter(c => c.published !== false);
+      if(data.products&&typeof data.products==='object')PRODUCTS=Object.fromEntries(Object.entries(data.products).map(([slug,items])=>[slug,(Array.isArray(items)?items:[]).filter(p=>p.published!==false)]));
+      if(data.settings&&typeof data.settings==='object')SETTINGS=data.settings;
+      const logo=SETTINGS.logoImage||ASSETS['assets/logo-9.webp'];
+      if(logo){$('header-logo').src=logo;$('drawer-logo').src=logo;}
+      $('footer-name').textContent=SETTINGS.siteName||'Le Bontà Italiane';
+      $('footer-tagline').textContent=SETTINGS.tagline||'Qualità · Tradizione · Buon gusto';
+      $('footer-contact').href='https://wa.me/'+String(SETTINGS.whatsapp||'393270649626').replace(/\\D/g,'');
+      menu();
+      route();
+    } catch(error) {
+      console.warn('Catalogo online non aggiornato; uso i dati incorporati.',error);
     }
-    window.scrollTo(0,0);
   }
   function setup(){
     const logo=SETTINGS.logoImage || ASSETS['assets/logo-9.webp'];if(logo){$('header-logo').src=logo;$('drawer-logo').src=logo;}
@@ -412,6 +342,65 @@ body.home-page .menu-toggle{display:none!important}
     menu();route();window.addEventListener('hashchange',route);
   }
   setup();
+  loadPublishedCatalog();
 })();
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+  try {
+    if (navigator.doNotTrack === '1' || window.doNotTrack === '1') return;
+    const client = window.supabase.createClient(
+      'https://plkxxumxakkiopzngccz.supabase.co',
+      'sb_publishable_LZtYXRnLbyfA_dIdB3Jgig_Vb_UWmod'
+    );
+    const makeId = () => (window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+          const r = Math.random() * 16 | 0;
+          return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+        });
+    const getSessionId = key => {
+      let value = sessionStorage.getItem(key);
+      if (!value) { value = makeId(); sessionStorage.setItem(key, value); }
+      return value;
+    };
+    const visitorId = getSessionId('lbi_analytics_visitor');
+    const sessionId = getSessionId('lbi_analytics_session');
+    let lastPath = '';
+    const recordPage = async () => {
+      const pagePath = (location.pathname + location.hash).slice(0, 500);
+      if (pagePath === lastPath) return;
+      lastPath = pagePath;
+      let referrerHost = null;
+      try { if (document.referrer) referrerHost = new URL(document.referrer).hostname.slice(0, 255); } catch (_) {}
+      const ua = navigator.userAgent || '';
+      const deviceType = /iPad|Tablet|PlayBook|Silk/i.test(ua) ? 'tablet'
+        : /Mobi|Android|iPhone|iPod/i.test(ua) ? 'mobile'
+        : 'desktop';
+      const browser = /Edg\//.test(ua) ? 'Edge'
+        : /SamsungBrowser\//.test(ua) ? 'Samsung Internet'
+        : /Firefox\//.test(ua) ? 'Firefox'
+        : /Chrome\//.test(ua) ? 'Chrome'
+        : /Safari\//.test(ua) ? 'Safari' : 'Other';
+      const { error } = await client.from('site_analytics_events').insert({
+        visitor_id: visitorId,
+        session_id: sessionId,
+        page_path: pagePath || '/',
+        referrer_host: referrerHost,
+        device_type: deviceType,
+        browser
+      });
+      if (error) console.debug('Statistiche non disponibili:', error.message);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', recordPage, { once: true });
+    else recordPage();
+    window.addEventListener('hashchange', recordPage);
+  } catch (error) {
+    console.debug('Statistiche non inizializzate:', error);
+  }
+})();
+</script>
+
 </body></html>
