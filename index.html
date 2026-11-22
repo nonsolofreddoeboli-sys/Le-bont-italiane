@@ -286,12 +286,30 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 }
 @media(prefers-reduced-motion:reduce){.home-category-card,.home-promo-card,.home-primary,.home-secondary{transition:none}}
 
+
+/* HOMEPAGE DEFINITIVA: logo, categorie complete, contatti */
+.menu-toggle i{display:none!important}
+.menu-toggle{min-width:82px!important;width:auto!important;justify-content:center!important;padding:0 15px!important}
+.menu-toggle span{font-size:13px!important;letter-spacing:.02em!important;text-transform:none!important}
+.home{padding:25px 0 38px!important;min-height:0!important}
+.home-categories-heading{margin:0 0 24px;padding:0 0 17px;border-bottom:1px solid var(--line)}
+.home-categories-heading .section-kicker{display:block;margin:0 0 5px}
+.home-categories-heading h1{margin:0;color:var(--espresso);font:400 clamp(29px,4vw,38px)/1.15 var(--serif)}
+.home-category-groups{display:grid;gap:23px}
+.home-category-group{padding:0 0 20px;border-bottom:1px solid var(--line)}
+.home-category-group h2{margin:0 0 12px;color:var(--espresso);font:700 18px/1.3 var(--sans)}
+.home-category-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.home-category-link{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:58px;padding:13px 16px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--espresso);font:700 15px/1.35 var(--sans);box-shadow:0 3px 12px rgba(43,25,18,.035);transition:background .16s,border-color .16s}
+.home-category-link:hover{background:var(--soft);border-color:var(--bronze)}
+.home-category-arrow{flex:0 0 auto;color:var(--coffee-mid);font-size:22px;line-height:1}
+@media(max-width:760px){.home-category-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.home-category-link{min-height:55px;padding:12px;font-size:14px}}
+@media(max-width:420px){.home{padding-top:18px!important}.home-category-grid{grid-template-columns:1fr}.home-category-group h2{font-size:17px}}
 </style>
 </head>
 <body>
 <header class="header"><div class="container header-inner">
 <a aria-label="Torna alla Home di Le Bontà Italiane" class="brand" href="#home"><img alt="Le Bontà Italiane" id="header-logo"/></a>
-<button aria-controls="site-menu" aria-expanded="false" aria-label="Apri il menu delle categorie" class="menu-toggle" id="menu-open" type="button"><i></i><i></i><i></i><span>MENU</span></button>
+<button aria-controls="site-menu" aria-expanded="false" aria-label="Apri il menù delle categorie" class="menu-toggle" id="menu-open" type="button"><i></i><i></i><i></i><span>menù</span></button>
 </div></header>
 <main id="site-main"></main>
 <footer aria-label="Contatti Le Bontà Italiane" class="footer"><div class="container footer-inner">
@@ -347,116 +365,64 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   function closeMenu(){drawer.classList.remove('open');drawer.setAttribute('aria-hidden','true');drawer.inert=true;overlay.hidden=true;document.body.classList.remove('is-locked');$('menu-open').setAttribute('aria-expanded','false');}
   $('menu-open').addEventListener('click',openMenu);$('menu-close').addEventListener('click',()=>{closeMenu();$('menu-open').focus();});overlay.addEventListener('click',closeMenu);
   document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&drawer.classList.contains('open'))closeMenu()});
-  function getHomeRootCategories(){
+  function getHomeCategoryGroups(){
     const hasParentTree=CATS.some(c=>c.parentSlug);
-    let roots=[];
+    let groups=[];
     if(hasParentTree){
-      roots=CATS.filter(c=>!c.parentSlug && (CATS.some(x=>x.parentSlug===c.slug) || (PRODUCTS[c.slug]||[]).length));
+      const roots=CATS.filter(c=>!c.parentSlug);
+      groups=roots.map(root=>{
+        const descendants=[],seen=new Set([root.slug]),queue=[root.slug];
+        while(queue.length){
+          const parentSlug=queue.shift();
+          CATS.filter(c=>c.parentSlug===parentSlug).forEach(c=>{
+            if(!seen.has(c.slug)){seen.add(c.slug);descendants.push(c);queue.push(c.slug);}
+          });
+        }
+        return {label:root.title||root.parent||'Catalogo',entries:descendants.length?descendants:[root]};
+      });
     }else{
-      const groups=new Map();
-      CATS.forEach(c=>{const label=c.parent||c.title;if(!groups.has(label))groups.set(label,[]);groups.get(label).push(c);});
-      roots=[...groups.entries()].map(([label,items])=>({slug:items[0].slug,title:label,parent:label,_children:items}));
+      const grouped=new Map();
+      CATS.forEach(c=>{
+        const label=c.parent||c.title||'Catalogo';
+        if(!grouped.has(label))grouped.set(label,[]);
+        grouped.get(label).push(c);
+      });
+      groups=[...grouped.entries()].map(([label,entries])=>({label,entries}));
     }
-    const collectSlugs=root=>{
-      if(root._children)return root._children.map(c=>c.slug);
-      const result=[root.slug],seen=new Set(result),queue=[root.slug];
-      while(queue.length){const parentSlug=queue.shift();CATS.filter(c=>c.parentSlug===parentSlug).forEach(c=>{if(!seen.has(c.slug)){seen.add(c.slug);result.push(c.slug);queue.push(c.slug);}});}
-      return result;
-    };
-    return roots.map(root=>{
-      const slugs=collectSlugs(root);
-      const items=slugs.flatMap(slug=>(PRODUCTS[slug]||[]).filter(p=>p.published!==false));
-      const representative=items.find(p=>p.image && (ASSETS[p.image] || /^data:image\//.test(p.image) || /^https:\/\//.test(p.image)));
-      return {root,slugs,count:items.length,image:representative?.image || root.image || '',label:root.title||root.parent||'Catalogo'};
-    }).filter(x=>x.count>0 || x.image).sort((a,b)=>b.count-a.count || a.label.localeCompare(b.label,'it')).slice(0,4);
-  }
-  function openCatalogMenu(expandAll=false,rootSlug=''){
-    openMenu();
-    const nav=$('drawer-nav');
-    if(expandAll){
-      nav.querySelectorAll('.drawer-parent').forEach(toggle=>{if(toggle.getAttribute('aria-expanded')!=='true')toggle.click();});
-      return;
-    }
-    const selected=bySlug(rootSlug);
-    const groupLabel=selected?(selected.parent||selected.title):'';
-    const toggle=[...nav.querySelectorAll('.drawer-parent')].find(btn=>btn.querySelector('span')?.textContent.trim()===groupLabel);
-    if(toggle && toggle.getAttribute('aria-expanded')!=='true')toggle.click();
-  }
-  function homePromoProducts(){
-    const all=Object.values(PRODUCTS).flat().filter(p=>p && p.published!==false);
-    const findProduct=value=>all.find(p=>p.id===value || p.name===value);
-    const offers=Array.isArray(SETTINGS.offers)?SETTINGS.offers:[];
-    const linked=offers.map(o=>findProduct(o.productId||o.product_id||o.productSlug||o.product)).filter(Boolean);
-    const marked=all.filter(p=>p.isPromo===true || p.is_promo===true || p.featured===true || p.promotion===true || p.promo===true || (p.originalPrice && (p.promoPrice||p.discount)));
-    const unique=[...new Map([...linked,...marked].map(p=>[p.id||p.name,p])).values()];
-    return unique.slice(0,4);
-  }
-  function homePromoCard(p){
-    const card=make('a','home-promo-card');card.href='#'+encodeURIComponent(p.category||'home');card.setAttribute('aria-label','Scopri il prodotto '+p.name);
-    const photo=make('div','home-promo-photo');
-    if(p.image){const img=make('img');setImage(img,p.image);img.alt=p.name;photo.append(img);}
-    card.append(photo);
-    const body=make('div','home-promo-body');body.append(make('h3','',p.name));
-    if(p.format)body.append(make('p','',p.format));
-    const oldPrice=p.originalPrice||p.original_price||'',newPrice=p.promoPrice||p.promo_price||p.price||'';
-    if(oldPrice || newPrice){
-      const price=make('div','home-promo-price');
-      if(oldPrice && newPrice && String(oldPrice)!==String(newPrice))price.textContent=String(oldPrice)+' → '+String(newPrice);
-      else price.textContent=String(newPrice||oldPrice);
-      body.append(price);
-    }
-    body.append(make('span','home-promo-cta','Scopri il prodotto →'));card.append(body);return card;
+    return groups.map(group=>({
+      label:group.label,
+      entries:group.entries.slice().sort((a,b)=>{
+        const nameA=(a.child|| (a.slug==='pellet'?'Pellet':a.title)||'').trim();
+        const nameB=(b.child|| (b.slug==='pellet'?'Pellet':b.title)||'').trim();
+        return nameA.localeCompare(nameB,'it',{sensitivity:'base'});
+      })
+    })).sort((a,b)=>a.label.localeCompare(b.label,'it',{sensitivity:'base'}));
   }
   function renderHome(){
     const root=$('site-main');root.replaceChildren();
     const shell=make('div','container home');
-
-    const intro=make('section','home-intro');intro.setAttribute('aria-labelledby','home-catalog-title');
-    intro.append(make('span','section-kicker','Le Bontà Italiane'));
-    const introTitle=make('h1','', 'Scopri il nostro catalogo');introTitle.id='home-catalog-title';intro.append(introTitle);
-    intro.append(make('p','', 'Un’ampia selezione di specialità italiane, scelte con cura per portare qualità e tradizione sulla tua tavola.'));
-    const explore=make('button','home-primary','Esplora tutto il catalogo →');explore.type='button';explore.addEventListener('click',()=>openCatalogMenu(true));intro.append(explore);
-    shell.append(intro);
-
-    const categories=make('section','home-section');categories.setAttribute('aria-labelledby','home-categories-title');
-    const catHead=make('div','home-section-head');const catTitle=make('h2','','Scegli una categoria');catTitle.id='home-categories-title';catHead.append(catTitle);categories.append(catHead);
-    const grid=make('div','home-category-grid');
-    getHomeRootCategories().forEach(item=>{
-      const button=make('button','home-category-card');button.type='button';button.setAttribute('aria-label','Apri le categorie '+item.label);
-      const photo=make('div','home-category-photo');
-      if(item.image){const img=make('img');setImage(img,item.image);img.alt='';photo.append(img);}else{photo.classList.add('is-empty');photo.textContent='Le nostre specialità';}
-      const name=make('div','home-category-name');name.append(make('span','',item.label),make('span','','›'));button.append(photo,name);
-      button.addEventListener('click',()=>openCatalogMenu(false,item.root.slug));grid.append(button);
+    const heading=make('div','home-categories-heading');
+    heading.append(make('span','section-kicker','Le Bontà Italiane'));
+    heading.append(make('h1','','Le nostre categorie'));
+    shell.append(heading);
+    const groups=make('div','home-category-groups');
+    getHomeCategoryGroups().forEach(group=>{
+      const section=make('section','home-category-group');
+      section.setAttribute('aria-label',group.label);
+      section.append(make('h2','',group.label));
+      const grid=make('div','home-category-grid');
+      group.entries.forEach(category=>{
+        const label=category.child || (category.slug==='pellet'?'Pellet':category.title||category.parent||'Categoria');
+        const link=make('a','home-category-link');
+        link.href='#'+encodeURIComponent(category.slug);
+        link.setAttribute('aria-label','Apri la categoria '+label);
+        link.append(make('span','',label),make('span','home-category-arrow','›'));
+        grid.append(link);
+      });
+      section.append(grid);
+      groups.append(section);
     });
-    categories.append(grid);
-    const allCats=make('button','home-secondary home-all-categories','Vedi tutte le categorie →');allCats.type='button';allCats.addEventListener('click',()=>openCatalogMenu(true));categories.append(allCats);
-    shell.append(categories);
-
-    const promo=make('section','home-section home-promos');promo.setAttribute('aria-labelledby','home-promos-title');
-    const promoHead=make('div','home-section-head');const promoTitle=make('h2','','Promo del mese');promoTitle.id='home-promos-title';promoHead.append(promoTitle);promo.append(promoHead);
-    const promoProducts=homePromoProducts();
-    if(promoProducts.length>=4){
-      const promoGrid=make('div','home-promo-grid');promoProducts.forEach(p=>promoGrid.append(homePromoCard(p)));promo.append(promoGrid);
-    }else{
-      const offers=Array.isArray(SETTINGS.offers)?SETTINGS.offers:[];
-      const offer=offers.find(o=>o && o.image) || null;
-      const fallbackImage=offer?.image || SETTINGS.offerImage || '';
-      if(fallbackImage){
-        const fallback=make('div','home-offer-fallback');
-        const img=make('img');setImage(img,fallbackImage);img.alt=offer?.title||'Promozione del mese';fallback.append(img);
-        const copy=make('div');copy.append(make('p','', 'La promozione è disponibile. Per conoscere i prodotti e le condizioni, chiedici informazioni direttamente su WhatsApp.'));
-        const wa=make('a','home-primary','Chiedi informazioni su WhatsApp');wa.href='https://wa.me/'+String(SETTINGS.whatsapp||'393270649626').replace(/\D/g,'')+'?text='+encodeURIComponent('Buongiorno, vorrei informazioni sulla promozione del mese.');wa.target='_blank';wa.rel='noopener noreferrer';copy.append(wa);fallback.append(copy);promo.append(fallback);
-      }else{
-        const note=make('div','category-awaiting');note.append(make('strong','','Le promozioni sono in aggiornamento'),make('p','','Le offerte verranno mostrate qui quando saranno associate ai singoli prodotti del catalogo.'));promo.append(note);
-      }
-    }
-    shell.append(promo);
-
-    const story=make('section','home-story');story.setAttribute('aria-labelledby','home-story-title');
-    const storyCopy=make('div');const storyTitle=make('h2','','Il gusto delle cose buone');storyTitle.id='home-story-title';storyCopy.append(storyTitle);
-    storyCopy.append(make('p','','Scopri le nostre specialità e lasciati guidare nella scelta dei prodotti. Per informazioni, disponibilità e richieste siamo a tua disposizione su WhatsApp.'));
-    const storyWa=make('a','home-primary','Scrivici su WhatsApp');storyWa.href='https://wa.me/'+String(SETTINGS.whatsapp||'393270649626').replace(/\D/g,'');storyWa.target='_blank';storyWa.rel='noopener noreferrer';story.append(storyCopy,storyWa);
-    shell.append(story);
+    shell.append(groups);
     root.append(shell);
   }
   function cardFor(p){
