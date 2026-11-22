@@ -257,7 +257,12 @@ body.home-page .menu-toggle{display:none!important}
    Nessuna ricostruzione della navigazione: si riutilizza #drawer-nav. */
 body.home-page .home-categories{padding-top:28px;padding-bottom:42px;min-height:calc(100vh - 210px)}
 body.home-page .home-categories .home-categories-title{margin:0 0 18px;color:var(--espresso);font:600 clamp(28px,4vw,38px)/1.2 var(--sans);letter-spacing:-.02em}
-body.home-page .home-categories .drawer-nav{display:block;flex:initial;padding:12px 24px 22px;background:var(--espresso);border-radius:18px}
+body.home-page .home-categories .drawer-nav{
+  display:block!important;position:static!important;transform:none!important;
+  visibility:visible!important;opacity:1!important;width:100%;height:auto!important;
+  max-height:none!important;overflow:visible!important;flex:none!important;
+  padding:12px 24px 22px;background:var(--espresso);border-radius:18px
+}
 body.home-page .menu-toggle{display:none!important}
 </style>
 </head>
@@ -302,44 +307,84 @@ body.home-page .menu-toggle{display:none!important}
   }
   function setImage(img,key) {img.src = photoURL(key); img.loading = 'lazy'; img.decoding = 'async';}
   function menu() {
-    const nav = $('drawer-nav'); nav.replaceChildren();
-    const parents = [...new Set(CATS.map(c => c.parent || 'Catalogo'))];
-    for(const parent of parents) {
+    const nav = $('drawer-nav');
+    nav.replaceChildren();
+    const compareItalian = (a,b) => String(a).localeCompare(String(b),'it',{sensitivity:'base'});
+    const parents = [...new Set(CATS.map(c => c.parent || 'Catalogo'))].sort(compareItalian);
+
+    function addCategoryLink(container, category, label) {
+      const a = make('a','',label);
+      a.href = '#'+encodeURIComponent(category.slug);
+      container.append(a);
+    }
+
+    function addTree(nodes, container) {
+      const ordered = [...nodes.values()].sort((a,b) => compareItalian(a.label,b.label));
+      for (const node of ordered) {
+        const children = [...node.children.values()];
+        if (!children.length) {
+          if (node.category) addCategoryLink(container,node.category,node.label);
+          continue;
+        }
+        const wrap = make('div','drawer-subgroup');
+        const toggle = make('button','drawer-subparent');
+        toggle.type = 'button';
+        toggle.setAttribute('aria-expanded','false');
+        toggle.append(make('span','',node.label),make('span','drawer-arrow','⌄'));
+        const inside = make('div','drawer-subchildren');
+        inside.hidden = true;
+        toggle.addEventListener('click',() => {
+          const next = inside.hidden;
+          inside.hidden = !next;
+          toggle.setAttribute('aria-expanded',String(next));
+        });
+        wrap.append(toggle,inside);
+        container.append(wrap);
+        if (node.category) addCategoryLink(inside,node.category,node.label);
+        addTree(node.children,inside);
+      }
+    }
+
+    for (const parent of parents) {
       const entries = CATS.filter(c => (c.parent || 'Catalogo') === parent);
       const group = make('div','drawer-group');
       if (entries.length === 1 && !entries[0].child) {
-        const a = make('a','drawer-direct',parent); a.href='#'+encodeURIComponent(entries[0].slug);group.append(a);nav.append(group);continue;
+        const a = make('a','drawer-direct',parent);
+        a.href = '#'+encodeURIComponent(entries[0].slug);
+        group.append(a);
+        nav.append(group);
+        continue;
       }
-      const toggle = make('button','drawer-parent'); toggle.type='button';toggle.setAttribute('aria-expanded','false');
+      const toggle = make('button','drawer-parent');
+      toggle.type = 'button';
+      toggle.setAttribute('aria-expanded','false');
       toggle.append(make('span','',parent),make('span','drawer-arrow','⌄'));
-      const inside = make('div','drawer-children');inside.hidden=true;
-      toggle.addEventListener('click',()=>{const next=inside.hidden;inside.hidden=!next;toggle.setAttribute('aria-expanded',String(next));});
-      group.append(toggle,inside); nav.append(group);
-      const subGroupNames = [...new Set(entries.filter(c=>(c.child||'').includes(' · ')).map(c=>c.child.split(' · ')[0].trim()))];
-      const hasChildrenFor = brand => entries.some(c=>(c.child||'').startsWith(brand+' · '));
-      const seenSub = new Set();
-      for (const c of entries) {
-        const child=c.child || c.title || c.parent;
-        if (subGroupNames.includes(child) && hasChildrenFor(child))continue;
-        if (child.includes(' · ')){
-          const [brand] = child.split(' · ');
-          if (!seenSub.has(brand)) {
-            seenSub.add(brand);
-            const wrap=make('div','drawer-subgroup');const b=make('button','drawer-subparent');b.type='button'; b.setAttribute('aria-expanded','false');
-            b.append(make('span','',brand),make('span','drawer-arrow','⌄'));
-            const subs=make('div','drawer-subchildren');subs.hidden=true;
-            b.addEventListener('click',()=>{const next=subs.hidden;subs.hidden=!next;b.setAttribute('aria-expanded',String(next));});
-            wrap.append(b,subs);inside.append(wrap);
-            for (const sc of entries.filter(x=>(x.child||'').startsWith(brand+' · '))) {
-              const a=make('a','',sc.child.slice(brand.length+3));a.href='#'+encodeURIComponent(sc.slug);subs.append(a);
-            }
-          }
-        } else {
-          const a = make('a','',child);a.href='#'+encodeURIComponent(c.slug);inside.append(a);
+      const inside = make('div','drawer-children');
+      inside.hidden = true;
+      toggle.addEventListener('click',() => {
+        const next = inside.hidden;
+        inside.hidden = !next;
+        toggle.setAttribute('aria-expanded',String(next));
+      });
+      group.append(toggle,inside);
+      nav.append(group);
+
+      const roots = new Map();
+      for (const category of entries) {
+        const path = (category.child || category.title || category.parent || parent)
+          .split(' · ').map(part => part.trim()).filter(Boolean);
+        let level = roots;
+        let node;
+        for (const part of path) {
+          if (!level.has(part)) level.set(part,{label:part,category:null,children:new Map()});
+          node = level.get(part);
+          level = node.children;
         }
+        node.category = category;
       }
+      addTree(roots,inside);
     }
-    nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMenu));
+    nav.querySelectorAll('a').forEach(a => a.addEventListener('click',closeMenu));
   }
   const drawer=$('site-menu'); const overlay=$('overlay');
   function openMenu(){drawer.classList.add('open');drawer.setAttribute('aria-hidden','false');drawer.inert=false;overlay.hidden=false;document.body.classList.add('is-locked');$('menu-open').setAttribute('aria-expanded','true');$('menu-close').focus();}
